@@ -72,6 +72,11 @@ selecting one shows all of its properties.
 - Re-uploading a version replaces its generic items (inside a single transaction) instead of duplicating them.
   Inserts are JDBC-batched (`hibernate.jdbc.batch_size`).
 - Searches are case-insensitive and match the name **or** the code.
+- Drug search is backed by the composite index `idx_drug_search (version_id, valid_to, name, code)`. A `LIKE '%term%'`
+  can't seek into a B-tree, but the index restricts the scan to the active drugs of one version and evaluates the
+  match on compact index entries instead of full rows. With ~870k drugs this takes a search from ~3.6s to ~0.3s.
+  Very broad terms (e.g. a single letter) still scan all active drugs of the version. Hibernate (`ddl-auto: update`)
+  creates the index automatically on existing databases.
 
 ### REST API (base path `/backend/api/v1`)
 | Method | Path | Description |
