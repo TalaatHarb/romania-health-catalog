@@ -1,4 +1,4 @@
 export interface CatalogVersion {
     id: string;
-    issueDate: EpochTimeStamp;
+    issueDate: EpochTimeStamp | string;
 }

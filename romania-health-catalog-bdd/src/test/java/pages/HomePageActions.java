@@ -5,12 +5,15 @@ import java.util.List;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.Select;
 
 import hooks.GlobalHooks;
 import pages.locators.HomePageElementsLocator;
 import utils.PageUtils;
 
 public class HomePageActions {
+
+	private static final Object IMPORT_LOCK = new Object();
 
 	private final HomePageElementsLocator homePageElements;
 	private final WebDriver webDriver;
@@ -48,17 +51,39 @@ public class HomePageActions {
 	}
 
 	public void importFile(String filePath) {
+		synchronized (IMPORT_LOCK) {
+			doImportFile(filePath);
+		}
+	}
+
+	private void doImportFile(String filePath) {
 		var absolutePath = Paths.get(filePath).toAbsolutePath().toString();
 		homePageElements.importButton.click();
 		
 		homePageElements.fileUploadInput.sendKeys(absolutePath);
 		PageUtils.waitUntilClickable(webDriver, homePageElements.uploadButton);
 		homePageElements.uploadButton.click();
-        PageUtils.waitUntilElementVanish(webDriver, homePageElements.loadingIndicator);
+        PageUtils.waitUntilUploadFinishes(webDriver, homePageElements.loadingIndicator);
 		
         PageUtils.waitUntilClickable(webDriver, homePageElements.closeModalButton);
 		homePageElements.closeModalButton.click();
 		PageUtils.waitUntilElementVanish(webDriver, homePageElements.modal);
+	}
+
+	/**
+	 * Imports the catalog of the given issue date unless it was already imported
+	 */
+	public void ensureVersionAvailable(String issueDate, String filePath) {
+		// scenarios run in parallel, so imports are serialized and the page is reloaded to see versions imported meanwhile
+		synchronized (IMPORT_LOCK) {
+			webDriver.navigate().refresh();
+			clickOnVersionsMenu();
+			boolean available = hasVersion(issueDate);
+			clickOnVersionsMenu();
+			if (!available) {
+				doImportFile(filePath);
+			}
+		}
 	}
 	
 	public boolean hasVersion(String issueDate) {
@@ -76,7 +101,38 @@ public class HomePageActions {
 	}
 
 	public WebElement getDrugView() {
+		PageUtils.waitUntilVisible(webDriver, homePageElements.drugView);
 		return homePageElements.drugView;
+	}
+
+	public WebElement getItemView() {
+		PageUtils.waitUntilVisible(webDriver, homePageElements.itemView);
+		return homePageElements.itemView;
+	}
+
+	/**
+	 * @return labels of the object types that can be searched (e.g. "Cities (18)")
+	 */
+	public List<String> getSearchTypes() {
+		return homePageElements.searchTypeOptions.stream().map(WebElement::getText).toList();
+	}
+
+	/**
+	 * Chooses what to search in, the option is matched by its label (counts are ignored)
+	 */
+	public void selectSearchType(String typeLabel) {
+		// item types (and their counts) are loaded asynchronously once a version is selected
+		WebElement option = PageUtils.waitUntil(webDriver, driver -> homePageElements.searchTypeOptions.stream()
+				.filter(o -> o.getText().equals(typeLabel) || o.getText().startsWith(typeLabel + " ("))
+				.filter(WebElement::isEnabled)
+				.findFirst()
+				.orElse(null));
+		new Select(homePageElements.searchType).selectByVisibleText(option.getText());
+	}
+
+	public void searchIn(String searchTerm, String typeLabel) {
+		selectSearchType(typeLabel);
+		search(searchTerm);
 	}
 	
 	public void clickOnFirstSearchResult() {

@@ -43,3 +43,66 @@ Feature: Romania Home page scenarios
     And I can open drug search result
 
 Deliverable: Public repository containing the full application (frontend + backend), the e2e test suite, and a README covering setup, database choice, architecture decisions, and how to run the app and the e2e suite.
+
+## Implementation
+
+### Modules
+| Module | Stack | Purpose |
+| --- | --- | --- |
+| `romania-health-catalog-be` | Java 25, Spring Boot 4, Spring Data JPA, H2 (file), MapStruct | REST API, XML parsing and persistence |
+| `romania-health-catalog-fe` | React 18, TypeScript, Vite, Bootstrap 5, Jest | Single page application |
+| `romania-health-catalog-bdd` | Cucumber, Selenium, JUnit 5 | End-to-end acceptance tests |
+
+### Every catalog object is stored and searchable
+Uploading a catalog persists **all** object types found in the XML, not only drugs: countries, districts, cities,
+streets, physicians, specialities, insurance houses, health departments, active substances, ATC codes, ICD-10
+diagnostics, NHP programs, co-payment lists, holidays, business rules and more (see `CatalogItemType`).
+
+In the UI, next to the version selector, the **Search in** dropdown lets you choose what to search. Each entry shows
+how many objects of that type the selected version contains; empty types are disabled. Results are paginated and
+selecting one shows all of its properties.
+
+### Design decisions
+- **Drugs keep a dedicated table** (`DrugEntity`) and endpoints because they have rich, typed details (prices, flags,
+  validity) and existing consumers.
+- **All other objects use one generic table** (`CatalogItemEntity`: type, code, name and a JSON `details` column).
+  The `CatalogItemType` enum is the single registry that maps each XML collection to a label and to the properties
+  used as code and name. Supporting a new XML type takes one enum constant, with no new entity, repository or
+  endpoint.
+- Re-uploading a version replaces its generic items (inside a single transaction) instead of duplicating them.
+  Inserts are JDBC-batched (`hibernate.jdbc.batch_size`).
+- Searches are case-insensitive and match the name **or** the code.
+
+### REST API (base path `/backend/api/v1`)
+| Method | Path | Description |
+| --- | --- | --- |
+| GET | `/versions` | Uploaded versions |
+| POST | `/versions` | Upload a catalog (`multipart/form-data`, field `file`, `.xml` or `.zip`) |
+| GET | `/versions/{versionId}/drugs?searchTerm=&page=&size=&sort=` | Search active drugs by name or code |
+| GET | `/drugs/{drugId}` | Drug details |
+| GET | `/versions/{versionId}/item-types` | Searchable object types with their counts for a version |
+| GET | `/versions/{versionId}/items?type=CITY&searchTerm=&page=&size=&sort=` | Search objects of a type by name or code |
+| GET | `/items/{itemId}` | Object details |
+
+OpenAPI docs: `http://localhost:8080/backend/swagger-ui/index.html`.
+
+### Running locally
+```shell
+# backend (http://localhost:8080/backend), H2 database stored in ./db
+cd romania-health-catalog-be
+mvn spring-boot:run
+
+# frontend (http://localhost:5173)
+cd romania-health-catalog-fe
+npm install
+npm run dev
+
+# e2e tests (needs the backend, the frontend and Chrome)
+cd romania-health-catalog-bdd
+mvn test                                   # up to 4 browsers in parallel
+mvn test "-Dbdd.parallelism=1"             # one scenario at a time
+mvn test "-Dbrowser=firefox" "-Dsite.url=http://localhost:5173"
+```
+
+The search scenarios import the sample catalog themselves if it isn't available yet, so any scenario can run on
+its own and in any order.

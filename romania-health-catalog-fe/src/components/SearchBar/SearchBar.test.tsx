@@ -3,6 +3,7 @@ import SearchBar from "./SearchBar";
 import { Version } from "@/models/Version";
 import { emptyPage } from "@/models/Page";
 import { Drug } from "@/models/Drug";
+import { ItemType } from "@/models/ItemType";
 
 describe('SearchBar', () => {
     test('renders without versions', () => {
@@ -143,6 +144,67 @@ describe('SearchBar', () => {
         
         await waitFor(() => {
             expect(mockSearch).toHaveBeenCalledWith('v2', 'test');
+        });
+    });
+
+    describe('search type selection', () => {
+        const versions: Version[] = [{ version: new Date(2024, 11), id: 'v1' }];
+        const itemTypes: ItemType[] = [
+            { type: 'DRUG', label: 'Drugs', count: 3 },
+            { type: 'CITY', label: 'Cities', count: 18 },
+            { type: 'STREET', label: 'Streets', count: 0 },
+        ];
+
+        test('defaults to drugs when no item types are given', () => {
+            render(<SearchBar />);
+            const select = document.getElementById('search-type') as HTMLSelectElement;
+            expect(select.value).toBe('DRUG');
+            expect(screen.getByRole('option', { name: 'Drugs' })).toBeDefined();
+        });
+
+        test('renders item types with counts and disables empty ones', () => {
+            render(<SearchBar versions={versions} itemTypes={itemTypes} />);
+            expect(screen.getByRole('option', { name: 'Cities (18)' })).toBeDefined();
+            const streets = screen.getByRole('option', { name: 'Streets (0)' }) as HTMLOptionElement;
+            expect(streets.disabled).toBe(true);
+        });
+
+        test('searches items of the selected type', async () => {
+            const mockDrugSearch = jest.fn().mockResolvedValue(emptyPage<Drug>());
+            const mockItemSearch = jest.fn().mockResolvedValue(emptyPage());
+            const mockTypeChanged = jest.fn();
+            render(<SearchBar versions={versions} itemTypes={itemTypes} searchFunctionCallback={mockDrugSearch}
+                searchItemsCallback={mockItemSearch} typeChangedCallback={mockTypeChanged} />);
+
+            fireEvent.change(document.getElementById('search-type')!, { target: { value: 'CITY' } });
+            expect(mockTypeChanged).toHaveBeenCalledWith('CITY');
+            const searchInput = document.getElementById('search-bar') as HTMLInputElement;
+            expect(searchInput.placeholder).toMatch(/search cities/i);
+
+            fireEvent.change(searchInput, { target: { value: 'Rupea' } });
+            fireEvent.click(document.getElementById('search-button')!);
+
+            await waitFor(() => {
+                expect(mockItemSearch).toHaveBeenCalledWith('v1', 'Rupea', 'CITY');
+            });
+            expect(mockDrugSearch).not.toHaveBeenCalled();
+        });
+
+        test('notifies version changes', () => {
+            const mockVersionChanged = jest.fn();
+            render(<SearchBar versions={versions} versionChangedCallback={mockVersionChanged} />);
+            expect(mockVersionChanged).toHaveBeenCalledWith(versions[0]);
+        });
+
+        test('falls back to drugs when the selected type is no longer available', () => {
+            const mockTypeChanged = jest.fn();
+            const { rerender } = render(<SearchBar versions={versions} itemTypes={itemTypes} typeChangedCallback={mockTypeChanged} />);
+            fireEvent.change(document.getElementById('search-type')!, { target: { value: 'CITY' } });
+
+            rerender(<SearchBar versions={versions} itemTypes={[itemTypes[0]]} typeChangedCallback={mockTypeChanged} />);
+
+            expect((document.getElementById('search-type') as HTMLSelectElement).value).toBe('DRUG');
+            expect(mockTypeChanged).toHaveBeenLastCalledWith('DRUG');
         });
     });
 });

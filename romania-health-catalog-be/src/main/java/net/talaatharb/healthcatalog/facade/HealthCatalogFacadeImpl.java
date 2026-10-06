@@ -21,6 +21,7 @@ import net.talaatharb.healthcatalog.dto.xml.Drug;
 import net.talaatharb.healthcatalog.mapper.DrugMapper;
 import net.talaatharb.healthcatalog.mapper.HealthCatalogVersionMapper;
 import net.talaatharb.healthcatalog.model.HealthCatalogVersionEntity;
+import net.talaatharb.healthcatalog.service.CatalogItemService;
 import net.talaatharb.healthcatalog.service.HealthCatalogVersionService;
 
 @RequiredArgsConstructor
@@ -31,6 +32,7 @@ public class HealthCatalogFacadeImpl implements HealthCatalogFacade {
 	private final HealthCatalogVersionMapper healthCatalogVersionMapper;
 	private final HealthCatalogVersionService healthCatalogVersionService;
 	private final DrugMapper drugMapper;
+	private final CatalogItemService catalogItemService;
 
 	@Transactional(value = TxType.REQUIRED)
 	@Override
@@ -57,8 +59,11 @@ public class HealthCatalogFacadeImpl implements HealthCatalogFacade {
 		List<Drug> drugList = catalog.getDrugs().getDrugList();
 		log.debug("Saving {} drugs", drugList.size());
 		healthCatalogVersionService.saveDrugs(drugMapper.fromXMLDtoToEntity(drugList), newVersion);
-		
 		log.debug("Save drugs successful");
+
+		long savedItems = catalogItemService.saveItems(catalog, newVersion);
+		log.debug("Saved {} other catalog items", savedItems);
+
 		return healthCatalogVersionMapper.fromEntityToDto(newVersion);
 	}
 

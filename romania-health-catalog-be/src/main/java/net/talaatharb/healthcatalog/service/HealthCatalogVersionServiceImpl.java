@@ -51,7 +51,12 @@ public class HealthCatalogVersionServiceImpl implements HealthCatalogVersionServ
 
 	@Override
 	public Page<DrugEntity> searchDrugs(UUID versionId, String searchTerm, Pageable pageable) {
-		return drugRepository.findAllByVersionIdAndValidToIsNullAndNameContainingIgnoreCase(versionId, searchTerm, pageable);
+		return drugRepository.searchActiveDrugs(versionId, searchTerm == null ? "" : searchTerm.trim(), pageable);
+	}
+
+	@Override
+	public long countDrugs(UUID versionId) {
+		return drugRepository.countByVersionIdAndValidToIsNull(versionId);
 	}
 
 	@Override

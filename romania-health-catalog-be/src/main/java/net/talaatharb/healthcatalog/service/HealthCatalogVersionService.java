@@ -21,4 +21,6 @@ public interface HealthCatalogVersionService {
 
 	DrugEntity getDrug(UUID drugId);
 
+	long countDrugs(UUID versionId);
+
 }

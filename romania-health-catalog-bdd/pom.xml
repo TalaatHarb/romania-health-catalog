@@ -7,6 +7,8 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>romania-health-catalog-bdd</name>
 	<properties>
+		<!-- max number of scenarios (browser instances) running at once, override with -Dbdd.parallelism=1 -->
+		<bdd.parallelism>4</bdd.parallelism>
 		<!-- language encoding -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -152,6 +154,9 @@
 						<configurationParameters>
 							cucumber.junit-platform.naming-strategy=long
 							cucumber.execution.parallel.enabled=true
+							cucumber.execution.parallel.config.strategy=fixed
+							cucumber.execution.parallel.config.fixed.parallelism=${bdd.parallelism}
+							cucumber.execution.parallel.config.fixed.max-pool-size=${bdd.parallelism}
 						</configurationParameters>
 					</properties>
 				</configuration>

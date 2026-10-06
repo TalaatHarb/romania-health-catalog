@@ -53,7 +53,7 @@ const VersionSwitcher = ({ versions = [], versionChanged = (_) => { } }: Readonl
                 {versions.length >= 1 ?
                     versions.map(v => {
                         return (
-                            <button id={v.id} key={v.id} className="dropdown-item version" onClick={() => {
+                            <button id={v.id} key={v.id} type="button" className="dropdown-item version" onClick={() => {
                                 versionChanged(v);
                                 setVersion(v.version);
                             }}>

@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import SearchResults from "./SearchResults";
 import { Drug } from "@/models/Drug";
+import { CatalogItem } from "@/models/CatalogItem";
 import { Page } from "@/models/Page";
 
 describe('SearchResults', () => {
@@ -459,5 +460,67 @@ describe('SearchResults', () => {
         
         const nextButton = screen.getByText('Next');
         expect(nextButton.closest('li')?.className).toContain('disabled');
+    });
+
+    test('limits the number of page buttons for many pages', () => {
+        const page: Page<Drug> = {
+            content: [{ id: '1', code: 'C', name: 'Drug', isNarcotic: 0, qtyPerPackage: 1, pricePerPackage: 1, validFrom: new Date('2023-01-01'), concentration: '', pharmaceuticalForm: '', company: '', country: '', atc: '' }],
+            size: 1, number: 49, totalElements: 100, totalPages: 100, numberOfElements: 1, first: false, last: false
+        };
+
+        render(<SearchResults drugs={page} />);
+
+        expect(screen.getByText('50').closest('li')?.className).toContain('active');
+        expect(screen.queryByText('1')).toBeNull();
+        expect(screen.queryByText('100')).toBeNull();
+        expect(document.querySelectorAll('.page-item').length).toBe(9);
+    });
+
+    describe('catalog items', () => {
+        const item: CatalogItem = {
+            id: 'item-1',
+            type: 'CITY',
+            label: 'Cities',
+            code: '4020',
+            name: 'Rupea',
+            details: { code: '4020', name: 'Rupea', districtCode: 'BV', siruta: '41291' }
+        };
+        const itemPage: Page<CatalogItem> = {
+            content: [item], size: 7, number: 0, totalElements: 1, totalPages: 1, numberOfElements: 1
+        };
+
+        test('renders items instead of drugs when provided', () => {
+            render(<SearchResults items={itemPage} />);
+
+            expect(screen.getByText('Rupea')).toBeDefined();
+            expect(screen.getByText('4020')).toBeDefined();
+            expect(screen.getByText('BV • 41291')).toBeDefined();
+            expect(screen.getByText('1 items')).toBeDefined();
+            expect(document.querySelectorAll('.search-result').length).toBe(1);
+        });
+
+        test('calls selectItemCallback when item is clicked', () => {
+            const mockSelectItem = jest.fn();
+            render(<SearchResults items={itemPage} selectItemCallback={mockSelectItem} />);
+
+            fireEvent.click(document.getElementById('item-1')!);
+
+            expect(mockSelectItem).toHaveBeenCalledWith(item);
+        });
+
+        test('highlights the selected item', () => {
+            render(<SearchResults items={itemPage} selectedId="item-1" />);
+            expect(document.getElementById('item-1')?.className).toContain('active');
+        });
+
+        test('renders no results for empty item page', () => {
+            render(<SearchResults items={{ ...itemPage, content: [], totalElements: 0, numberOfElements: 0 }} />);
+            expect(screen.getByText('No results found')).toBeDefined();
+        });
+
+        test('renders loading state', () => {
+            render(<SearchResults items={{ ...itemPage, content: [] }} loading />);
+            expect(screen.getByRole('status').textContent).toContain('Searching...');
+        });
     });
 });

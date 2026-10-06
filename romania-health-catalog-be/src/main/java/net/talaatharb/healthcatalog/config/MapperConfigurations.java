@@ -4,6 +4,7 @@ import org.mapstruct.factory.Mappers;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import net.talaatharb.healthcatalog.mapper.CatalogItemMapper;
 import net.talaatharb.healthcatalog.mapper.DrugMapper;
 import net.talaatharb.healthcatalog.mapper.HealthCatalogVersionMapper;
 
@@ -18,6 +19,11 @@ public class MapperConfigurations {
 	@Bean
 	DrugMapper getDrugMapper() {
 		return Mappers.getMapper(DrugMapper.class);
+	}
+
+	@Bean
+	CatalogItemMapper getCatalogItemMapper() {
+		return Mappers.getMapper(CatalogItemMapper.class);
 	}
 
 }

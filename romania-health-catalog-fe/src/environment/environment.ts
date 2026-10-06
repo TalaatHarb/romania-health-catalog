@@ -14,4 +14,5 @@ export const environment = {
     apiUrl: API_URL,
     defaultPageSize: 7,
     defaultSort: 'updateDate,desc',
+    defaultItemSort: 'name,asc',
 };

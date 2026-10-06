@@ -39,8 +39,17 @@ public class HomePageElementsLocator {
 	@FindBy(xpath = "//*[@id=\"importFileModal\"]")
 	public WebElement modal;
 	
-	@FindBy(xpath = "//*[@id=\"drug\"]")
+	@FindBy(xpath = "//*[@id=\"drug-card\"]")
 	public WebElement drugView;
+
+	@FindBy(xpath = "//*[@id=\"item-card\"]")
+	public WebElement itemView;
+
+	@FindBy(xpath = "//*[@id=\"search-type\"]")
+	public WebElement searchType;
+
+	@FindBy(css = "#search-type option")
+	public List<WebElement> searchTypeOptions;
 	
 	@FindBy(css = ".search-result")
 	public List<WebElement> searchResults;

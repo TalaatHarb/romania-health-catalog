@@ -3,6 +3,9 @@ package steps;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Locale;
+
+import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +54,32 @@ public class HomeSteps {
 	@Then("I can open drug search result")
 	public void iCanOpenDrugSearchResult() {
 		homePage.clickOnFirstSearchResult();
-		assertNotNull(homePage.getDrugView(), "Drug isn't in view");
+		assertTrue(homePage.getDrugView().isDisplayed(), "Drug isn't in view");
+	}
+
+	@Given("catalog version {string} is available")
+	public void catalogVersionIsAvailable(String issueDate) {
+		homePage.ensureVersionAvailable(issueDate, PageUtils.mapVersionToFileName(issueDate));
+	}
+
+	@Then("I can choose to search in {string}")
+	public void iCanChooseToSearchIn(String typeLabel) {
+		var types = homePage.getSearchTypes();
+		assertTrue(types.stream().anyMatch(t -> t.equals(typeLabel) || t.startsWith(typeLabel + " (")),
+				"Can't search in " + typeLabel + ", available: " + types);
+	}
+
+	@When("I search for {string} in {string}")
+	public void iSearchForIn(String searchTerm, String typeLabel) {
+		homePage.searchIn(searchTerm, typeLabel);
+	}
+
+	@Then("I can open search result showing {string}")
+	public void iCanOpenSearchResultShowing(String expectedText) {
+		homePage.clickOnFirstSearchResult();
+		var itemView = homePage.getItemView();
+		assertTrue(itemView.getText().toLowerCase(Locale.ROOT).contains(expectedText.toLowerCase(Locale.ROOT)),
+				"Item details don't show " + expectedText);
 	}
 
 	

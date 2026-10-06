@@ -20,6 +20,11 @@ spring:
     database: default
     hibernate:
       ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 500
+        order_inserts: true
   application:
     name: romania-health-catalog-be
   lifecycle:

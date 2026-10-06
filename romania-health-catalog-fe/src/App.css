@@ -12,27 +12,69 @@
 /* App level custom styles to complement Bootstrap layout */
 
 body {
-	background-color: #f8f9fa;
+	background-color: #f4f6f9;
 }
 
 .container {
-	max-width: 1100px;
+	max-width: 1200px;
+}
+
+.app-header {
+	background: linear-gradient(135deg, #0b3d91 0%, #1565c0 60%, #1e88e5 100%);
+	color: #fff;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.app-header h1 {
+	font-size: clamp(1.4rem, 1rem + 1.5vw, 2rem);
+	font-weight: 600;
+	margin-bottom: 0.15rem;
+}
+
+.app-subtitle {
+	font-size: 0.9rem;
+	opacity: 0.85;
+}
+
+.card {
+	border: 0;
+	border-radius: 0.75rem;
 }
 
 #results-section .card {
 	min-height: 220px;
 }
 
-#drug-card .card-body {
+#drug-card .card-body,
+#item-card .card-body {
 	word-wrap: break-word;
+}
+
+.item-details th {
+	width: 40%;
 }
 
 .list-group-item {
 	cursor: pointer;
 }
 
+.result-summary {
+	font-size: 0.85rem;
+	opacity: 0.75;
+}
+
 .card-title {
 	color: #212529;
+}
+
+.list-group-item.active .fw-bold,
+.list-group-item.active .result-summary {
+	color: #fff;
+}
+
+:focus-visible {
+	outline: 3px solid #0b57d0;
+	outline-offset: 2px;
 }
 
 /* small responsive tweak for the top header */
@@ -44,4 +86,3 @@ header .btn-success {
 .small.text-muted {
 	font-size: 0.85rem;
 }
-
