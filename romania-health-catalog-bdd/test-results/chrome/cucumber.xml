@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Cucumber" time="10.281" tests="1" skipped="0" failures="1" errors="0">
+<testcase classname="Romania Home page scenarios" name="Available versions" time="10.05">
+<failure/>
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+When Looking into the list of available versions............................undefined
+Then I find the list of available versions..................................skipped
+]]></system-out>
+</testcase>
+</testsuite>

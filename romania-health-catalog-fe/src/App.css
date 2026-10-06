@@ -1,0 +1,47 @@
+/* Ensure VersionSwitcher has a minimum width and matches Search button width on mobile */
+.searchbar-version-switcher {
+	min-width: 175px;
+}
+
+@media (max-width: 767.98px) {
+	.searchbar-version-switcher {
+		width: 100%;
+		min-width: 0;
+	}
+}
+/* App level custom styles to complement Bootstrap layout */
+
+body {
+	background-color: #f8f9fa;
+}
+
+.container {
+	max-width: 1100px;
+}
+
+#results-section .card {
+	min-height: 220px;
+}
+
+#drug-card .card-body {
+	word-wrap: break-word;
+}
+
+.list-group-item {
+	cursor: pointer;
+}
+
+.card-title {
+	color: #212529;
+}
+
+/* small responsive tweak for the top header */
+header .btn-success {
+	font-size: 1.05rem;
+	padding: 0.45rem 0.8rem;
+}
+
+.small.text-muted {
+	font-size: 0.85rem;
+}
+
