@@ -18,6 +18,7 @@ import net.talaatharb.healthcatalog.model.DrugEntity;
 import net.talaatharb.healthcatalog.model.HealthCatalogVersionEntity;
 import net.talaatharb.healthcatalog.repository.DrugRepository;
 import net.talaatharb.healthcatalog.repository.HealthCatalogVersionRepository;
+import net.talaatharb.healthcatalog.repository.SearchPatterns;
 
 @RequiredArgsConstructor
 @Service
@@ -51,7 +52,7 @@ public class HealthCatalogVersionServiceImpl implements HealthCatalogVersionServ
 
 	@Override
 	public Page<DrugEntity> searchDrugs(UUID versionId, String searchTerm, Pageable pageable) {
-		return drugRepository.searchActiveDrugs(versionId, searchTerm == null ? "" : searchTerm.trim(), pageable);
+		return drugRepository.searchActiveDrugs(versionId, SearchPatterns.contains(searchTerm), pageable);
 	}
 
 	@Override

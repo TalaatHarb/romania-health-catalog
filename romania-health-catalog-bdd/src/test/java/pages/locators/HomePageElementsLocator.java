@@ -32,6 +32,12 @@ public class HomePageElementsLocator {
 	
 	@FindBy(xpath = "//*[@id=\"file-upload\"]")
 	public WebElement fileUploadInput;
+
+	@FindBy(xpath = "//*[@id=\"upload-secret\"]")
+	public WebElement uploadSecretInput;
+
+	@FindBy(xpath = "//*[@id=\"upload-error\"]")
+	public WebElement uploadError;
 	
 	@FindBy(xpath = "//*[@id=\"loading\"]")
 	public WebElement loadingIndicator;

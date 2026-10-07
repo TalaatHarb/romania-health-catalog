@@ -53,8 +53,8 @@ function App() {
       .catch(() => setItemTypes(DEFAULT_ITEM_TYPES));
   }
 
-  async function uploadFile(file: File): Promise<Version> {
-    const version = await HealthCatalogService.uploadFile(file);
+  async function uploadFile(file: File, uploadSecret: string): Promise<Version> {
+    const version = await HealthCatalogService.uploadFile(file, uploadSecret);
     fetchVersions();
     return version;
   }

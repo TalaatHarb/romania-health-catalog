@@ -15,4 +15,6 @@ export const environment = {
     defaultPageSize: 7,
     defaultSort: 'updateDate,desc',
     defaultItemSort: 'name,asc',
+    // pre-filled in the upload dialog; must match the backend's UPLOAD_SECRET
+    defaultUploadSecret: 'UPLOAD_SECREET',
 };

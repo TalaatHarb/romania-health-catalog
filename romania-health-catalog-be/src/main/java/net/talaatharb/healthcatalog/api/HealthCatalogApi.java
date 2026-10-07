@@ -12,11 +12,13 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.multipart.MultipartFile;
 
+import net.talaatharb.healthcatalog.config.UploadSecretVerifier;
 import net.talaatharb.healthcatalog.constants.ApiConstants;
 import net.talaatharb.healthcatalog.dto.DrugDto;
 import net.talaatharb.healthcatalog.dto.HealthCatalogVersionDto;
@@ -29,9 +31,16 @@ public interface HealthCatalogApi {
 	@ResponseStatus(HttpStatus.OK)
 	List<HealthCatalogVersionDto> getAllAvailableVersions();
 	
+	/**
+	 * Uploads a catalog zip. Requires the upload secret as an {@code uploadSecret} header or request (query/form)
+	 * parameter; the header wins when both are sent.
+	 */
 	@PostMapping(ApiConstants.VERSIONS)
 	@ResponseStatus(HttpStatus.CREATED)
-    HealthCatalogVersionDto uploadFile(@RequestParam MultipartFile file) throws IOException;
+	HealthCatalogVersionDto uploadFile(@RequestParam MultipartFile file,
+			@RequestHeader(name = UploadSecretVerifier.UPLOAD_SECRET, required = false) String uploadSecretHeader,
+			@RequestParam(name = UploadSecretVerifier.UPLOAD_SECRET, required = false) String uploadSecretParam)
+			throws IOException;
 	
 	@GetMapping(path = "/versions/{versionId}/drugs", produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.OK)

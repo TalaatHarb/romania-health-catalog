@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.talaatharb.healthcatalog.config.UploadSecretVerifier;
 import net.talaatharb.healthcatalog.dto.DrugDto;
 import net.talaatharb.healthcatalog.dto.HealthCatalogVersionDto;
 import net.talaatharb.healthcatalog.facade.HealthCatalogFacade;
@@ -22,6 +23,8 @@ import net.talaatharb.healthcatalog.utils.FileUtils;
 public class HealthCatalogController implements HealthCatalogApi{
 
 	private final HealthCatalogFacade healthCatalogFacade;
+
+	private final UploadSecretVerifier uploadSecretVerifier;
 	
 	@Override
 	public List<HealthCatalogVersionDto> getAllAvailableVersions(){
@@ -29,7 +32,9 @@ public class HealthCatalogController implements HealthCatalogApi{
 	}
 
 	@Override
-	public HealthCatalogVersionDto uploadFile(MultipartFile file) throws IOException {
+	public HealthCatalogVersionDto uploadFile(MultipartFile file, String uploadSecretHeader, String uploadSecretParam)
+			throws IOException {
+		uploadSecretVerifier.verify(uploadSecretHeader != null ? uploadSecretHeader : uploadSecretParam);
 		var catalog = FileUtils.readCatalogFromZipUpload(file);
 		return healthCatalogFacade.saveVersion(catalog);
 	}

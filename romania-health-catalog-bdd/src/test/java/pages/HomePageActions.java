@@ -71,6 +71,28 @@ public class HomePageActions {
 	}
 
 	/**
+	 * Tries to import a catalog with the given upload secret and returns the upload error shown in the dialog
+	 */
+	public String importFileWithSecret(String filePath, String uploadSecret) {
+		var absolutePath = Paths.get(filePath).toAbsolutePath().toString();
+		homePageElements.importButton.click();
+		PageUtils.waitUntilVisible(webDriver, homePageElements.uploadSecretInput);
+
+		homePageElements.fileUploadInput.sendKeys(absolutePath);
+		homePageElements.uploadSecretInput.clear();
+		homePageElements.uploadSecretInput.sendKeys(uploadSecret);
+		PageUtils.waitUntilClickable(webDriver, homePageElements.uploadButton);
+		homePageElements.uploadButton.click();
+
+		PageUtils.waitUntilVisible(webDriver, homePageElements.uploadError);
+		String error = homePageElements.uploadError.getText();
+
+		homePageElements.closeModalButton.click();
+		PageUtils.waitUntilElementVanish(webDriver, homePageElements.modal);
+		return error;
+	}
+
+	/**
 	 * Imports the catalog of the given issue date unless it was already imported
 	 */
 	public void ensureVersionAvailable(String issueDate, String filePath) {
@@ -114,7 +136,11 @@ public class HomePageActions {
 	 * @return labels of the object types that can be searched (e.g. "Cities (18)")
 	 */
 	public List<String> getSearchTypes() {
-		return homePageElements.searchTypeOptions.stream().map(WebElement::getText).toList();
+		// item types are loaded asynchronously, only "Drugs" is present until they arrive
+		return PageUtils.waitUntil(webDriver, driver -> {
+			var types = homePageElements.searchTypeOptions.stream().map(WebElement::getText).toList();
+			return types.size() > 1 ? types : null;
+		});
 	}
 
 	/**

@@ -20,14 +20,25 @@ import lombok.Setter;
  * Generic storage for every catalog object other than drugs (cities, streets,
  * physicians, ...). The searchable code/name are stored in dedicated columns
  * and the full set of XML attributes is kept as JSON details.
+ * <p>
+ * The search index covers the search filter (version, type) and is ordered by name, so name-sorted pages are read in
+ * index order instead of sorting every item of the type, and the contains-match on name/code is evaluated on the
+ * compact index entries.
  */
 @Entity
 @Table(name = "catalog_item_entity", indexes = {
-		@Index(name = "idx_catalog_item_version_type", columnList = "version_id,type") })
+		@Index(name = CatalogItemEntity.SEARCH_INDEX, columnList = "version_id,type,name,code") })
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
 public class CatalogItemEntity extends GeneratedIdBaseEntity {
+
+	public static final String SEARCH_INDEX = "idx_catalog_item_search";
+
+	/**
+	 * Superseded by {@link #SEARCH_INDEX}; dropped from existing databases at startup
+	 */
+	public static final String LEGACY_VERSION_TYPE_INDEX = "idx_catalog_item_version_type";
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 64)

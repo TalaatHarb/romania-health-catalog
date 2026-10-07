@@ -21,16 +21,27 @@ public interface CatalogItemRepository extends JpaRepository<CatalogItemEntity, 
 		long getCount();
 	}
 
-	@Query("""
+	/**
+	 * The constant version/type prefix of the order by lets the requested sort (name) be read in the order of the
+	 * search index instead of sorting all items of the type. The count uses count(*) since count(i) counts the id,
+	 * which isn't in the search index and would load every matching row.
+	 */
+	@Query(value = """
 			select i from CatalogItemEntity i
 			where i.version.id = :versionId and i.type = :type
-			and (lower(i.name) like lower(concat('%', :searchTerm, '%'))
-			  or lower(i.code) like lower(concat('%', :searchTerm, '%')))
+			and (lower(i.name) like :pattern
+			  or lower(i.code) like :pattern)
+			order by i.version.id, i.type
+			""", countQuery = """
+			select count(*) from CatalogItemEntity i
+			where i.version.id = :versionId and i.type = :type
+			and (lower(i.name) like :pattern
+			  or lower(i.code) like :pattern)
 			""")
 	Page<CatalogItemEntity> search(@Param("versionId") UUID versionId, @Param("type") CatalogItemType type,
-			@Param("searchTerm") String searchTerm, Pageable pageable);
+			@Param("pattern") String pattern, Pageable pageable);
 
-	@Query("select i.type as type, count(i) as count from CatalogItemEntity i where i.version.id = :versionId group by i.type")
+	@Query("select i.type as type, count(*) as count from CatalogItemEntity i where i.version.id = :versionId group by i.type")
 	List<TypeCount> countByType(@Param("versionId") UUID versionId);
 
 	@Modifying

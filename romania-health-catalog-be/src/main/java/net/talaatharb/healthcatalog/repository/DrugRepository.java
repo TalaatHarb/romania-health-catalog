@@ -12,14 +12,24 @@ import net.talaatharb.healthcatalog.model.DrugEntity;
 
 public interface DrugRepository extends JpaRepository<DrugEntity, UUID>{
 
-	@Query("""
+	/**
+	 * The count uses count(*) since count(d) counts the id, which isn't in the search index and would load every
+	 * matching row
+	 */
+	@Query(value = """
 			select d from DrugEntity d
 			where d.version.id = :versionId and d.validTo is null
-			and (lower(d.name) like lower(concat('%', :searchTerm, '%'))
-			  or lower(d.code) like lower(concat('%', :searchTerm, '%')))
+			and (lower(d.name) like :pattern
+			  or lower(d.code) like :pattern)
+			""", countQuery = """
+			select count(*) from DrugEntity d
+			where d.version.id = :versionId and d.validTo is null
+			and (lower(d.name) like :pattern
+			  or lower(d.code) like :pattern)
 			""")
-	Page<DrugEntity> searchActiveDrugs(@Param("versionId") UUID versionId, @Param("searchTerm") String searchTerm,
+	Page<DrugEntity> searchActiveDrugs(@Param("versionId") UUID versionId, @Param("pattern") String pattern,
 			Pageable pageable);
 
-	long countByVersionIdAndValidToIsNull(UUID versionId);
+	@Query("select count(*) from DrugEntity d where d.version.id = :versionId and d.validTo is null")
+	long countByVersionIdAndValidToIsNull(@Param("versionId") UUID versionId);
 }

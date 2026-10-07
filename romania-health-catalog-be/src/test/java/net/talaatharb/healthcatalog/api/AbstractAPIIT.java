@@ -14,6 +14,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @ActiveProfiles(profiles = "test")
 @Tag("integration")
 public class AbstractAPIIT {
+
+	protected static final String DEFAULT_UPLOAD_SECRET = "UPLOAD_SECREET";
+
 	@Autowired
 	protected MockMvc mvc;
 

@@ -1,10 +1,193 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="Cucumber" time="3.692" tests="1" skipped="0" failures="0" errors="0">
-<testcase classname="Romania Home page scenarios" name="Available versions" time="3.505">
+<testsuite name="Cucumber" time="50.147" tests="24" skipped="0" failures="0" errors="0">
+<testcase classname="Romania Home page scenarios" name="Available versions" time="2.917">
 <system-out><![CDATA[
 Given I am on Catalog 'Home' page...........................................passed
 When Looking into the list of available versions............................passed
 Then I find the list of available versions..................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="Import new version" time="35.573">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+When I import new catalog with issue date '2024 - 3'........................passed
+Then I confirm '2024 - 3' gets added to the top of the list of available catalogs.passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="Import is rejected without the right upload secret" time="4.324">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+When I try to import catalog with issue date '2024 - 3' using upload secret 'WRONG_SECRET'.passed
+Then I see the upload error 'Missing or invalid upload secret'..............passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="Search for &lt;type&gt; in the catalog - #1.9: Search for Holidays in the catalog" time="4.186">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+When I search for 'Craciun' in 'Holidays'...................................passed
+Then I confirm at least 1 result............................................passed
+And I can open search result showing 'Craciun'..............................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="Search for a drug" time="33.44">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+When I search for 'NUTRIFLEX'...............................................passed
+Then I confirm at least 1 result............................................passed
+And I can open drug search result...........................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="Search for &lt;type&gt; in the catalog - #1.8: Search for ICD-10 diagnostics in the catalog" time="32.457">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+When I search for 'Hipoparatiroidia' in 'ICD-10 diagnostics'................passed
+Then I confirm at least 1 result............................................passed
+And I can open search result showing 'Hipoparatiroidia'.....................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="Search for a drug by choosing drugs explicitly" time="32.57">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+When I search for 'NUTRIFLEX' in 'Drugs'....................................passed
+Then I confirm at least 1 result............................................passed
+And I can open drug search result...........................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="All catalog objects can be searched - #1.10" time="2.628">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+Then I can choose to search in 'Holidays'...................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="Search for &lt;type&gt; in the catalog - #1.1: Search for Cities in the catalog" time="3.188">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+When I search for 'Rupea' in 'Cities'.......................................passed
+Then I confirm at least 1 result............................................passed
+And I can open search result showing 'Rupea'................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="Search for &lt;type&gt; in the catalog - #1.7: Search for Insurance houses in the catalog" time="3.161">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+When I search for 'Vrancea' in 'Insurance houses'...........................passed
+Then I confirm at least 1 result............................................passed
+And I can open search result showing 'Vrancea'..............................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="All catalog objects can be searched - #1.1" time="2.922">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+Then I can choose to search in 'Drugs'......................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="All catalog objects can be searched - #1.9" time="2.847">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+Then I can choose to search in 'ICD-10 diagnostics'.........................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="Search for &lt;type&gt; in the catalog - #1.2: Search for Streets in the catalog" time="3.527">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+When I search for 'Posada' in 'Streets'.....................................passed
+Then I confirm at least 1 result............................................passed
+And I can open search result showing 'Posada'...............................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="Search for &lt;type&gt; in the catalog - #1.6: Search for Specialities in the catalog" time="3.157">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+When I search for 'ORTODONTIE' in 'Specialities'............................passed
+Then I confirm at least 1 result............................................passed
+And I can open search result showing 'ORTODONTIE'...........................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="All catalog objects can be searched - #1.2" time="3.105">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+Then I can choose to search in 'Cities'.....................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="All catalog objects can be searched - #1.8" time="2.986">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+Then I can choose to search in 'Insurance houses'...........................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="All catalog objects can be searched - #1.3" time="2.938">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+Then I can choose to search in 'Streets'....................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="Search for &lt;type&gt; in the catalog - #1.5: Search for Countries in the catalog" time="3.331">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+When I search for 'GEORGIA' in 'Countries'..................................passed
+Then I confirm at least 1 result............................................passed
+And I can open search result showing 'GEORGIA'..............................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="Search for &lt;type&gt; in the catalog - #1.3: Search for Districts in the catalog" time="3.523">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+When I search for 'ARAD' in 'Districts'.....................................passed
+Then I confirm at least 1 result............................................passed
+And I can open search result showing 'ARAD'.................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="All catalog objects can be searched - #1.7" time="3.023">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+Then I can choose to search in 'Specialities'...............................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="All catalog objects can be searched - #1.4" time="3.036">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+Then I can choose to search in 'Districts'..................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="Search for &lt;type&gt; in the catalog - #1.4: Search for Physicians in the catalog" time="3.504">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+When I search for 'COSTEA' in 'Physicians'..................................passed
+Then I confirm at least 1 result............................................passed
+And I can open search result showing 'COSTEA'...............................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="All catalog objects can be searched - #1.5" time="2.88">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+Then I can choose to search in 'Physicians'.................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Romania Home page scenarios" name="All catalog objects can be searched - #1.6" time="2.864">
+<system-out><![CDATA[
+Given I am on Catalog 'Home' page...........................................passed
+And catalog version '2024 - 3' is available.................................passed
+Then I can choose to search in 'Countries'..................................passed
 ]]></system-out>
 </testcase>
 </testsuite>

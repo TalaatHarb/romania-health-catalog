@@ -77,12 +77,20 @@ selecting one shows all of its properties.
   match on compact index entries instead of full rows. With ~870k drugs this takes a search from ~3.6s to ~0.3s.
   Very broad terms (e.g. a single letter) still scan all active drugs of the version. Hibernate (`ddl-auto: update`)
   creates the index automatically on existing databases.
+- Item search is backed by `idx_catalog_item_search (version_id, type, name, code)`. The search query orders by the
+  constant `version_id, type` before the requested `name` sort, so pages are read in index order instead of sorting
+  every item of the type (first page of a 364k-item type: ~22s → ~0.4s). The superseded
+  `idx_catalog_item_version_type` index is dropped at startup (`SchemaMaintenance`), since Hibernate never drops
+  indexes and the database would keep choosing it.
+- Search counts and the item-type counts use `count(*)`, which is answered from the indexes (a derived `count(id)` has
+  to read every matching row). The contains pattern is built in Java (`SearchPatterns`) and bound as a single
+  parameter, so the database doesn't rebuild it for every scanned row.
 
 ### REST API (base path `/backend/api/v1`)
 | Method | Path | Description |
 | --- | --- | --- |
 | GET | `/versions` | Uploaded versions |
-| POST | `/versions` | Upload a catalog (`multipart/form-data`, field `file`, `.xml` or `.zip`) |
+| POST | `/versions` | Upload a catalog (`multipart/form-data`, field `file`, `.xml` or `.zip`); requires the upload secret |
 | GET | `/versions/{versionId}/drugs?searchTerm=&page=&size=&sort=` | Search active drugs by name or code |
 | GET | `/drugs/{drugId}` | Drug details |
 | GET | `/versions/{versionId}/item-types` | Searchable object types with their counts for a version |
@@ -90,6 +98,20 @@ selecting one shows all of its properties.
 | GET | `/items/{itemId}` | Object details |
 
 OpenAPI docs: `http://localhost:8080/backend/swagger-ui/index.html`.
+
+### Upload secret
+Uploads are only accepted with the upload secret, sent as the `uploadSecret` header or the `uploadSecret` query
+parameter. If both are sent, the header wins. A missing or wrong secret gets a `403` problem response
+("Missing or invalid upload secret") and nothing is stored.
+
+- The default secret is `UPLOAD_SECREET`. Override it with the `UPLOAD_SECRET` environment variable
+  (property `health-catalog.upload-secret`). **Always override it in production.** An empty value disables uploads.
+- The FE upload dialog has an "Upload secret" field pre-filled with the default. The real secret is never put
+  into the FE bundle.
+
+```shell
+curl -H "uploadSecret: UPLOAD_SECREET" -F "file=@catalog.zip" http://localhost:8080/backend/api/v1/versions
+```
 
 ### Running locally
 ```shell

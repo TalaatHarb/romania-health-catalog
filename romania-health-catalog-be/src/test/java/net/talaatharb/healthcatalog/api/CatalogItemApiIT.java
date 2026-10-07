@@ -19,6 +19,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import net.talaatharb.healthcatalog.config.UploadSecretVerifier;
 import net.talaatharb.healthcatalog.constants.ApiConstants;
 import net.talaatharb.healthcatalog.model.CatalogItemType;
 
@@ -30,7 +31,7 @@ class CatalogItemApiIT extends AbstractAPIIT {
 	void uploadSample() throws Exception {
 		InputStream inputStream = getClass().getClassLoader().getResourceAsStream("Sample.zip");
 		MockMultipartFile file = new MockMultipartFile("file", "Sample.zip", "application/zip", inputStream);
-		String response = mvc.perform(multipart(ApiConstants.VERSIONS_API_V1).file(file)).andExpect(status().isCreated())
+		String response = mvc.perform(multipart(ApiConstants.VERSIONS_API_V1).file(file).header(UploadSecretVerifier.UPLOAD_SECRET, DEFAULT_UPLOAD_SECRET)).andExpect(status().isCreated())
 				.andReturn().getResponse().getContentAsString();
 		versionId = objectMapper.readTree(response).get("id").asText();
 	}

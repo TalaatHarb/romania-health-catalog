@@ -23,6 +23,7 @@ import net.talaatharb.healthcatalog.model.CatalogItemEntity;
 import net.talaatharb.healthcatalog.model.CatalogItemType;
 import net.talaatharb.healthcatalog.model.HealthCatalogVersionEntity;
 import net.talaatharb.healthcatalog.repository.CatalogItemRepository;
+import net.talaatharb.healthcatalog.repository.SearchPatterns;
 
 @RequiredArgsConstructor
 @Service
@@ -65,7 +66,7 @@ public class CatalogItemServiceImpl implements CatalogItemService {
 	@Override
 	public Page<CatalogItemEntity> searchItems(UUID versionId, CatalogItemType type, String searchTerm,
 			Pageable pageable) {
-		return catalogItemRepository.search(versionId, type, searchTerm == null ? "" : searchTerm.trim(), pageable);
+		return catalogItemRepository.search(versionId, type, SearchPatterns.contains(searchTerm), pageable);
 	}
 
 	@Override

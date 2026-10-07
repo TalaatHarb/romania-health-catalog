@@ -105,7 +105,7 @@ describe('ImportButton', () => {
         fireEvent.click(uploadButton);
         
         await waitFor(() => {
-            expect(mockCallback).toHaveBeenCalledWith(file);
+            expect(mockCallback).toHaveBeenCalledWith(file, 'UPLOAD_SECREET');
         });
     });
 
@@ -173,5 +173,70 @@ describe('ImportButton', () => {
         await waitFor(() => {
             expect(mockCallback).not.toHaveBeenCalled();
         });
+    });
+
+    function selectFile(): File {
+        const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+        const file = new File(['test content'], 'test.zip', { type: 'application/zip' });
+        Object.defineProperty(fileInput, 'files', { value: [file], writable: false });
+        fireEvent.change(fileInput);
+        return file;
+    }
+
+    function secretInput(): HTMLInputElement {
+        return document.getElementById('upload-secret') as HTMLInputElement;
+    }
+
+    test('upload secret is pre-filled with the default secret', () => {
+        render(<ImportButton />);
+
+        expect(secretInput().value).toBe('UPLOAD_SECREET');
+        expect(screen.getByLabelText('Upload secret')).toBe(secretInput());
+    });
+
+    test('sends the entered upload secret', async () => {
+        const mockCallback = jest.fn().mockResolvedValue({ version: new Date(), id: '1' });
+        render(<ImportButton fileChangeCallback={mockCallback} />);
+        const file = selectFile();
+
+        fireEvent.change(secretInput(), { target: { value: 'my-secret' } });
+        fireEvent.click(document.getElementById('upload-button') as HTMLButtonElement);
+
+        await waitFor(() => expect(mockCallback).toHaveBeenCalledWith(file, 'my-secret'));
+    });
+
+    test('upload button is disabled when the upload secret is empty', () => {
+        render(<ImportButton />);
+        selectFile();
+
+        fireEvent.change(secretInput(), { target: { value: '' } });
+
+        expect((document.getElementById('upload-button') as HTMLButtonElement).disabled).toBe(true);
+    });
+
+    test('shows the error and keeps the file when the upload is rejected', async () => {
+        const mockCallback = jest.fn().mockRejectedValue(new Error('Missing or invalid upload secret'));
+        render(<ImportButton fileChangeCallback={mockCallback} />);
+        selectFile();
+
+        fireEvent.click(document.getElementById('upload-button') as HTMLButtonElement);
+
+        const error = await screen.findByText(/Upload failed:/);
+        expect(error).toHaveTextContent('Upload failed: Missing or invalid upload secret');
+        expect(screen.getByText(/test.zip/)).toBeDefined();
+        expect((document.getElementById('upload-button') as HTMLButtonElement).disabled).toBe(false);
+        expect(secretInput()).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    test('clears the error when the upload secret changes', async () => {
+        const mockCallback = jest.fn().mockRejectedValue(new Error('Missing or invalid upload secret'));
+        render(<ImportButton fileChangeCallback={mockCallback} />);
+        selectFile();
+        fireEvent.click(document.getElementById('upload-button') as HTMLButtonElement);
+        await screen.findByText(/Upload failed:/);
+
+        fireEvent.change(secretInput(), { target: { value: 'other' } });
+
+        expect(document.getElementById('upload-error')).toBeNull();
     });
 });

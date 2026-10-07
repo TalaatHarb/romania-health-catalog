@@ -19,6 +19,8 @@ public class HomeSteps {
 
 	private final HomePageActions homePage;
 
+	private String uploadError;
+
 	@When("Looking into the list of available versions")
 	public void lookingIntoTheListOfAvailableVersions() {
 		homePage.clickOnVersionsMenu();
@@ -33,6 +35,17 @@ public class HomeSteps {
 	@When("I import new catalog with issue date {string}")
 	public void importingNewVersion(String issueDate) {
 		homePage.importFile(PageUtils.mapVersionToFileName(issueDate));
+	}
+
+	@When("I try to import catalog with issue date {string} using upload secret {string}")
+	public void tryingToImportWithSecret(String issueDate, String uploadSecret) {
+		uploadError = homePage.importFileWithSecret(PageUtils.mapVersionToFileName(issueDate), uploadSecret);
+	}
+
+	@Then("I see the upload error {string}")
+	public void iSeeTheUploadError(String expectedError) {
+		assertNotNull(uploadError, "No upload error shown");
+		assertTrue(uploadError.contains(expectedError), "Unexpected upload error: " + uploadError);
 	}
 
 	@Then("I confirm {string} gets added to the top of the list of available catalogs")

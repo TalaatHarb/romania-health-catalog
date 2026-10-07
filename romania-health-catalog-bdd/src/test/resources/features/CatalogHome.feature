@@ -12,6 +12,12 @@ Feature: Romania Home page scenarios
     Given I am on Catalog 'Home' page
     When I import new catalog with issue date '2024 - 3'
     Then I confirm '2024 - 3' gets added to the top of the list of available catalogs
+
+  @Home @Import @UploadSecret
+  Scenario: Import is rejected without the right upload secret
+    Given I am on Catalog 'Home' page
+    When I try to import catalog with issue date '2024 - 3' using upload secret 'WRONG_SECRET'
+    Then I see the upload error 'Missing or invalid upload secret'
     
   @Home @Search @Drugs
   Scenario: Search for a drug

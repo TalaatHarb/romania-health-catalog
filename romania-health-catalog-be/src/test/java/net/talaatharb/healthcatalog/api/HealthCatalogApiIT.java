@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 
@@ -14,6 +15,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import net.talaatharb.healthcatalog.config.UploadSecretVerifier;
 import net.talaatharb.healthcatalog.constants.ApiConstants;
 
 class HealthCatalogApiIT extends AbstractAPIIT{
@@ -38,12 +40,57 @@ class HealthCatalogApiIT extends AbstractAPIIT{
 
 		final ResultActions result = mvc.perform(
 			multipart(ApiConstants.VERSIONS_API_V1)
-				.file(file)
+				.file(file).header(UploadSecretVerifier.UPLOAD_SECRET, DEFAULT_UPLOAD_SECRET)
 		);
 
 		result.andExpect(status().isCreated())
 			.andExpect(jsonPath("$.id").exists())
 			.andExpect(jsonPath("$.issueDate").exists());
+	}
+
+	@Test
+	void testUploadFile_WithSecretAsQueryParameter() throws Exception {
+		mvc.perform(multipart(ApiConstants.VERSIONS_API_V1).file(sampleZip())
+				.queryParam(UploadSecretVerifier.UPLOAD_SECRET, DEFAULT_UPLOAD_SECRET))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.id").exists());
+	}
+
+	@Test
+	void testUploadFile_WithoutSecret_IsForbidden() throws Exception {
+		mvc.perform(multipart(ApiConstants.VERSIONS_API_V1).file(sampleZip()))
+			.andExpect(status().isForbidden())
+			.andExpect(jsonPath("$.detail").value("Missing or invalid upload secret"));
+	}
+
+	@Test
+	void testUploadFile_WithWrongSecret_IsForbidden() throws Exception {
+		mvc.perform(multipart(ApiConstants.VERSIONS_API_V1).file(sampleZip())
+				.header(UploadSecretVerifier.UPLOAD_SECRET, "wrong"))
+			.andExpect(status().isForbidden());
+	}
+
+	@Test
+	void testUploadFile_WithWrongSecretHeader_IgnoresValidQueryParameter() throws Exception {
+		mvc.perform(multipart(ApiConstants.VERSIONS_API_V1).file(sampleZip())
+				.header(UploadSecretVerifier.UPLOAD_SECRET, "wrong")
+				.queryParam(UploadSecretVerifier.UPLOAD_SECRET, DEFAULT_UPLOAD_SECRET))
+			.andExpect(status().isForbidden());
+	}
+
+	@Test
+	void testUploadFile_WithoutSecret_DoesNotStoreVersion() throws Exception {
+		String before = mvc.perform(get(ApiConstants.VERSIONS_API_V1)).andReturn().getResponse().getContentAsString();
+
+		mvc.perform(multipart(ApiConstants.VERSIONS_API_V1).file(sampleZip())).andExpect(status().isForbidden());
+
+		mvc.perform(get(ApiConstants.VERSIONS_API_V1))
+			.andExpect(MockMvcResultMatchers.content().json(before));
+	}
+
+	private MockMultipartFile sampleZip() throws IOException {
+		return new MockMultipartFile("file", "Sample.zip", "application/zip",
+				getClass().getClassLoader().getResourceAsStream("Sample.zip"));
 	}
 
 	@Test
@@ -59,7 +106,7 @@ class HealthCatalogApiIT extends AbstractAPIIT{
 
 		final ResultActions result = mvc.perform(
 			multipart(ApiConstants.VERSIONS_API_V1)
-				.file(file)
+				.file(file).header(UploadSecretVerifier.UPLOAD_SECRET, DEFAULT_UPLOAD_SECRET)
 		);
 
 		result.andExpect(status().isBadRequest());
@@ -78,7 +125,7 @@ class HealthCatalogApiIT extends AbstractAPIIT{
 
 		final ResultActions uploadResult = mvc.perform(
 			multipart(ApiConstants.VERSIONS_API_V1)
-				.file(file)
+				.file(file).header(UploadSecretVerifier.UPLOAD_SECRET, DEFAULT_UPLOAD_SECRET)
 		);
 
 		String responseContent = uploadResult.andReturn().getResponse().getContentAsString();
@@ -131,7 +178,7 @@ class HealthCatalogApiIT extends AbstractAPIIT{
 
 		mvc.perform(
 			multipart(ApiConstants.VERSIONS_API_V1)
-				.file(file)
+				.file(file).header(UploadSecretVerifier.UPLOAD_SECRET, DEFAULT_UPLOAD_SECRET)
 		);
 
 		// Search for a drug to get a valid drug ID

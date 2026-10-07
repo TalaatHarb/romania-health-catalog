@@ -17,6 +17,7 @@ const ITEM_TYPES_API = "/item-types";
 const DEFAULT_PAGE_SIZE = environment.defaultPageSize;
 const DEFAULT_SORT = environment.defaultSort;
 const DEFAULT_ITEM_SORT = environment.defaultItemSort;
+const UPLOAD_SECRET_HEADER = "uploadSecret";
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
     const response = await fetch(url, init);
@@ -48,13 +49,18 @@ async function getAvailableVersions(): Promise<Version[]> {
 /**
  * Upload catalog file
  * @param file File to upload
+ * @param uploadSecret Secret the backend requires to accept uploads
  * @returns The version that got uploaded
  */
-async function uploadFile(file: File): Promise<Version> {
+async function uploadFile(file: File, uploadSecret: string): Promise<Version> {
     const formData = new FormData()
     formData.append('file', file, file.name)
 
-    const json = await fetchJson<CatalogVersion>(VERSIONS_API, { method: "POST", body: formData });
+    const json = await fetchJson<CatalogVersion>(VERSIONS_API, {
+        method: "POST",
+        headers: { [UPLOAD_SECRET_HEADER]: uploadSecret },
+        body: formData,
+    });
     return CatalogVersionToVersion.catalogVersionToVersion(json);
 }
 
