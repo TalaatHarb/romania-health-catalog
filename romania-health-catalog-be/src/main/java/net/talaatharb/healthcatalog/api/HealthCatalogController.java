@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.talaatharb.healthcatalog.config.UploadSecretVerifier;
+import net.talaatharb.healthcatalog.dto.DrugDetailsDto;
 import net.talaatharb.healthcatalog.dto.DrugDto;
 import net.talaatharb.healthcatalog.dto.HealthCatalogVersionDto;
 import net.talaatharb.healthcatalog.facade.HealthCatalogFacade;
@@ -36,15 +37,21 @@ public class HealthCatalogController implements HealthCatalogApi{
 	@Override
 	public HealthCatalogVersionDto uploadFile(MultipartFile file, String uploadSecretHeader, String uploadSecretParam)
 			throws IOException {
+		log.info("Received catalog upload '{}' ({} bytes)", file.getOriginalFilename(), file.getSize());
 		uploadSecretVerifier.verify(uploadSecretHeader != null ? uploadSecretHeader : uploadSecretParam);
 		var catalog = FileUtils.readCatalogFromZipUpload(file);
-		return healthCatalogFacade.saveVersion(catalog);
+		var version = healthCatalogFacade.saveVersion(catalog);
+		log.info("Catalog upload '{}' completed as version {}", file.getOriginalFilename(), version.getId());
+		return version;
 	}
 
 	@Override
 	public HealthCatalogVersionDto uploadUrl(String url, String uploadSecretHeader, String uploadSecretParam) {
+		log.info("Received catalog import request from URL");
 		uploadSecretVerifier.verify(uploadSecretHeader != null ? uploadSecretHeader : uploadSecretParam);
-		return healthCatalogFacade.saveVersion(catalogUrlImporter.download(url));
+		var version = healthCatalogFacade.saveVersion(catalogUrlImporter.download(url));
+		log.info("Catalog URL import completed as version {}", version.getId());
+		return version;
 	}
 
 	@Override
@@ -55,5 +62,10 @@ public class HealthCatalogController implements HealthCatalogApi{
 	@Override
 	public DrugDto getDrug(UUID drugId) {
 		return healthCatalogFacade.getDrug(drugId);
+	}
+
+	@Override
+	public DrugDetailsDto getDrugDetails(UUID drugId) {
+		return healthCatalogFacade.getDrugDetails(drugId);
 	}
 }

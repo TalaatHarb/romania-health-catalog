@@ -36,24 +36,26 @@ const VersionSwitcher = ({ versions = [], versionChanged = (_) => { } }: Readonl
 
     return (
 
-        <div className="btn-group">
-            <div className="text-capitalize btn btn-secondary">
+        <div className="btn-group version-switcher">
+            <div className="version-switcher-label btn btn-outline-primary text-capitalize" aria-live="polite">
                 {version ? "Version: " + versionToString(version) : "Choose Version"}
             </div>
             <button
                 id="toggle-dropdown"
                 type="button"
-                className={`btn btn-secondary dropdown-toggle dropdown-toggle-split`}
+                className={`btn btn-primary dropdown-toggle dropdown-toggle-split`}
+                aria-label="Select catalog version"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
             >
                 <span className="visually-hidden">Toggle Dropdown</span>
             </button>
-            <div id="versions-menu" className="dropdown-menu">
+            <div id="versions-menu" className="dropdown-menu dropdown-menu-end shadow version-switcher-menu">
                 {versions.length >= 1 ?
                     versions.map(v => {
                         return (
-                            <button id={v.id} key={v.id} type="button" className="dropdown-item version" onClick={() => {
+                            <button id={v.id} key={v.id} type="button" className={`dropdown-item version${version && v.version.getTime() === version.getTime() ? " active" : ""}`}
+                                aria-current={version && v.version.getTime() === version.getTime() ? "true" : undefined} onClick={() => {
                                 versionChanged(v);
                                 setVersion(v.version);
                             }}>
@@ -61,7 +63,7 @@ const VersionSwitcher = ({ versions = [], versionChanged = (_) => { } }: Readonl
                             </button>
                         );
                     })
-                    : <p id="no-versions-available">No versions Available</p>}
+                    : <p id="no-versions-available" className="text-muted small px-3 my-2">No versions Available</p>}
             </div>
         </div>
     );

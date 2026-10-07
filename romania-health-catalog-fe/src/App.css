@@ -86,3 +86,41 @@ header .btn-success {
 .small.text-muted {
 	font-size: 0.85rem;
 }
+
+/* version switcher */
+.version-switcher .version-switcher-label {
+	pointer-events: none;
+	font-weight: 500;
+}
+
+.version-switcher-menu {
+	min-width: 12rem;
+	max-height: 18rem;
+	overflow-y: auto;
+}
+
+.version-switcher-menu .dropdown-item.active::after {
+	content: "\2713";
+	float: right;
+}
+
+/* import dialog */
+.import-button {
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+.import-modal-header {
+	border-bottom: 3px solid #1565c0;
+}
+
+.import-dropzone {
+	border: 2px dashed #90a4c8;
+	border-radius: 0.5rem;
+	background: #f4f8ff;
+	padding: 1rem;
+}
+
+.import-dropzone:hover {
+	border-color: #1565c0;
+}

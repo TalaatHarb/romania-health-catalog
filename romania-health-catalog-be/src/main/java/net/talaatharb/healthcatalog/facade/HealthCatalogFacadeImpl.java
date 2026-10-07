@@ -14,6 +14,7 @@ import jakarta.transaction.Transactional;
 import jakarta.transaction.Transactional.TxType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.talaatharb.healthcatalog.dto.DrugDetailsDto;
 import net.talaatharb.healthcatalog.dto.DrugDto;
 import net.talaatharb.healthcatalog.dto.HealthCatalogVersionDto;
 import net.talaatharb.healthcatalog.dto.xml.Catalog;
@@ -22,6 +23,7 @@ import net.talaatharb.healthcatalog.mapper.DrugMapper;
 import net.talaatharb.healthcatalog.mapper.HealthCatalogVersionMapper;
 import net.talaatharb.healthcatalog.model.HealthCatalogVersionEntity;
 import net.talaatharb.healthcatalog.service.CatalogItemService;
+import net.talaatharb.healthcatalog.service.DrugDetailsService;
 import net.talaatharb.healthcatalog.service.HealthCatalogVersionService;
 
 @RequiredArgsConstructor
@@ -33,6 +35,7 @@ public class HealthCatalogFacadeImpl implements HealthCatalogFacade {
 	private final HealthCatalogVersionService healthCatalogVersionService;
 	private final DrugMapper drugMapper;
 	private final CatalogItemService catalogItemService;
+	private final DrugDetailsService drugDetailsService;
 
 	@Transactional(value = TxType.REQUIRED)
 	@Override
@@ -50,19 +53,19 @@ public class HealthCatalogFacadeImpl implements HealthCatalogFacade {
 	@Override
 	public HealthCatalogVersionDto saveVersion(Catalog catalog) {
 		Date issueDate = catalog.getIssueDate();
-		log.debug("Saving version with issue date: {}", issueDate.toString());
+		log.info("Saving version with issue date: {}", issueDate.toString());
 		HealthCatalogVersionEntity newVersion = new HealthCatalogVersionEntity();
 		newVersion.setId(UUID.nameUUIDFromBytes(issueDate.toString().getBytes(StandardCharsets.UTF_8)));
 		newVersion.setIssueDate(issueDate.toInstant());
 		newVersion = healthCatalogVersionService.saveVersion(newVersion);
 
 		List<Drug> drugList = catalog.getDrugs().getDrugList();
-		log.debug("Saving {} drugs", drugList.size());
+		log.info("Saving {} drugs", drugList.size());
 		healthCatalogVersionService.saveDrugs(drugMapper.fromXMLDtoToEntity(drugList), newVersion);
-		log.debug("Save drugs successful");
+		log.info("Saved {} drugs", drugList.size());
 
 		long savedItems = catalogItemService.saveItems(catalog, newVersion);
-		log.debug("Saved {} other catalog items", savedItems);
+		log.info("Saved {} other catalog items for version {}", savedItems, newVersion.getId());
 
 		return healthCatalogVersionMapper.fromEntityToDto(newVersion);
 	}
@@ -75,5 +78,12 @@ public class HealthCatalogFacadeImpl implements HealthCatalogFacade {
 	@Override
 	public DrugDto getDrug(UUID drugId) {
 		return drugMapper.fromEntityToDto(healthCatalogVersionService.getDrug(drugId));
+	}
+
+	@Transactional(value = TxType.REQUIRED)
+	@Override
+	public DrugDetailsDto getDrugDetails(UUID drugId) {
+		log.debug("Loading additional details of drug {}", drugId);
+		return drugDetailsService.getDetails(healthCatalogVersionService.getDrug(drugId));
 	}
 }

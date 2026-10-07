@@ -92,9 +92,16 @@ public class FileUtils {
 	}
 	
 	public static final Catalog readCatalogFromZipUpload(MultipartFile file) throws IOException {
-		if (file.isEmpty()) throw new IllegalArgumentException("Uploaded file is invalid");
+		if (file.isEmpty()) {
+			log.warn("Rejecting empty upload '{}'", file.getOriginalFilename());
+			throw new IllegalArgumentException("Uploaded file is invalid");
+		}
+		log.info("Reading catalog from uploaded file '{}'", file.getOriginalFilename());
 		try (var input = file.getInputStream()) {
-			return readCatalog(input);
+			var catalog = readCatalog(input);
+			log.info("Parsed catalog from uploaded file '{}', issue date {}", file.getOriginalFilename(),
+					catalog.getIssueDate());
+			return catalog;
 		}
 	}
 
@@ -103,16 +110,20 @@ public class FileUtils {
 			byte[] signature = stream.readNBytes(2);
 			stream.unread(signature);
 			if (signature.length == 2 && signature[0] == 'P' && signature[1] == 'K') {
+				log.info("Upload is a zip archive, looking for the XML entry");
 				try (var zip = new ZipInputStream(stream)) {
 					ZipEntry entry;
 					while ((entry = zip.getNextEntry()) != null) {
 						if (!entry.isDirectory() && entry.getName().toLowerCase(java.util.Locale.ROOT).endsWith(".xml")) {
+							log.info("Parsing zip entry {}", entry.getName());
 							return XMLUtils.createXMLObjectMapper().readValue(new LimitedXmlStream(zip), Catalog.class);
 						}
 					}
 				}
+				log.warn("No .xml file found in the uploaded zip");
 				throw new IllegalArgumentException("No .xml file found in the zip");
 			}
+			log.info("Upload is a plain XML document, parsing it");
 			return XMLUtils.createXMLObjectMapper().readValue(new LimitedXmlStream(stream), Catalog.class);
 		}
 	}

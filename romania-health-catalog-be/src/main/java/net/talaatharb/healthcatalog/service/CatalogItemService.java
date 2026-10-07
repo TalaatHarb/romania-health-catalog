@@ -30,4 +30,19 @@ public interface CatalogItemService {
 	Map<CatalogItemType, Long> countItemsByType(UUID versionId);
 
 	List<CatalogItemType> getGenericTypes();
+
+	/**
+	 * @return the items of the type in the version whose name equals the given value
+	 */
+	List<CatalogItemEntity> findByName(UUID versionId, CatalogItemType type, String name);
+
+	/**
+	 * @return the items of the type in the version whose code equals the given value
+	 */
+	List<CatalogItemEntity> findByCode(UUID versionId, CatalogItemType type, String code);
+
+	/**
+	 * @return every item of the type in the version
+	 */
+	List<CatalogItemEntity> findAllOfType(UUID versionId, CatalogItemType type);
 }

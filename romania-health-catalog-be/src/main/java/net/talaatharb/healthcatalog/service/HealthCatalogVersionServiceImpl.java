@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 import jakarta.transaction.Transactional;
 import jakarta.transaction.Transactional.TxType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.talaatharb.healthcatalog.model.DrugEntity;
 import net.talaatharb.healthcatalog.model.HealthCatalogVersionEntity;
 import net.talaatharb.healthcatalog.repository.DrugRepository;
@@ -22,6 +23,7 @@ import net.talaatharb.healthcatalog.repository.SearchPatterns;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class HealthCatalogVersionServiceImpl implements HealthCatalogVersionService {
 
 	private final HealthCatalogVersionRepository healthCatalogVersionRepository;
@@ -41,12 +43,15 @@ public class HealthCatalogVersionServiceImpl implements HealthCatalogVersionServ
 			return d;
 		}).toList();
 
+		log.info("Persisting {} drugs for version {}", drugs.size(), version.getId());
 		drugRepository.saveAll(drugs);
+		log.info("Persisted {} drugs for version {}", drugs.size(), version.getId());
 	}
 
 	@Transactional(value = TxType.REQUIRED)
 	@Override
 	public HealthCatalogVersionEntity saveVersion(HealthCatalogVersionEntity newVersion) {
+		log.info("Persisting version {} (issue date {})", newVersion.getId(), newVersion.getIssueDate());
 		return healthCatalogVersionRepository.save(newVersion);
 	}
 

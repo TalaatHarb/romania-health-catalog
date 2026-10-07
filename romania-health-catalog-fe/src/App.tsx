@@ -11,6 +11,7 @@ import { environment } from '@/environment/environment';
 import ImportButton from '@/components/ImportButton/ImportButton';
 import { Page, emptyPage } from '@/models/Page';
 import { Drug } from '@/models/Drug';
+import { DrugDetails } from '@/models/DrugDetails';
 import { CatalogItem } from '@/models/CatalogItem';
 import { DEFAULT_ITEM_TYPES, DRUG_TYPE, ItemType } from '@/models/ItemType';
 
@@ -32,6 +33,9 @@ function App() {
   const [drugsResult, setDrugsResult] = useState<Page<Drug>>(emptyPage<Drug>());
   const [itemsResult, setItemsResult] = useState<Page<CatalogItem>>(emptyPage<CatalogItem>());
   const [selectedDrug, setSelectedDrug] = useState<Drug | undefined>();
+  const [drugDetails, setDrugDetails] = useState<DrugDetails | undefined>();
+  const [drugDetailsLoading, setDrugDetailsLoading] = useState(false);
+  const [drugDetailsError, setDrugDetailsError] = useState(false);
   const [selectedItem, setSelectedItem] = useState<CatalogItem | undefined>();
   // track last search parameters so pagination can request additional pages
   const [lastSearch, setLastSearch] = useState<SearchParams | undefined>(undefined);
@@ -92,6 +96,23 @@ function App() {
     setLastSearch(undefined);
   }
 
+  // Enrich the drug view once the drug itself is shown
+  useEffect(() => {
+    setDrugDetails(undefined);
+    setDrugDetailsError(false);
+    if (!selectedDrug) {
+      setDrugDetailsLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setDrugDetailsLoading(true);
+    HealthCatalogService.loadDrugDetails(selectedDrug.id)
+      .then(details => { if (!cancelled) setDrugDetails(details); })
+      .catch(() => { if (!cancelled) setDrugDetailsError(true); })
+      .finally(() => { if (!cancelled) setDrugDetailsLoading(false); });
+    return () => { cancelled = true; };
+  }, [selectedDrug]);
+
   // Initial loading of the application
   useEffect(fetchVersions, []);
 
@@ -104,7 +125,7 @@ function App() {
             <p className="app-subtitle mb-0">Browse drugs, cities, streets, physicians and every other nomenclature of the CNAS catalog</p>
           </div>
           <div>
-            <ImportButton fileChangeCallback={uploadFile} urlUploadCallback={uploadUrl} />
+            <ImportButton buttonText="Import catalog" fileChangeCallback={uploadFile} urlUploadCallback={uploadUrl} />
           </div>
         </div>
       </header>
@@ -149,7 +170,7 @@ function App() {
           </div>
           <div className="col-12 col-lg-6">
             {isDrugSearch
-              ? <DrugView drug={selectedDrug} />
+              ? <DrugView drug={selectedDrug} details={drugDetails} detailsLoading={drugDetailsLoading} detailsError={drugDetailsError} />
               : <ItemView item={selectedItem} typeLabel={selectedTypeLabel} />}
           </div>
         </section>
