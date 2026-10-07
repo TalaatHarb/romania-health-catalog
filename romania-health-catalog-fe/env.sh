@@ -1,29 +1,46 @@
-#!/bin/bash
+#!/bin/sh
+# Generates env-config.js (window._env_) from the keys in the .env file.
+# A key's value comes from the environment variable of the same name when it's set and not empty,
+# otherwise from the .env file.
+#
+#   ENV_FILE     .env file listing the keys and their defaults (default ./.env)
+#   OUTPUT_FILE  generated script (default ./env-config.js)
+#
+# The FE image runs it from /docker-entrypoint.d before nginx starts: docker run -e API_URL=https://api...
+set -eu
 
-# Recreate config file
-rm -rf ./env-config.js
-touch ./env-config.js
+ENV_FILE="${ENV_FILE:-./.env}"
+OUTPUT_FILE="${OUTPUT_FILE:-./env-config.js}"
 
-# Add assignment 
-echo "window._env_ = {" >> ./env-config.js
+if [ ! -r "$ENV_FILE" ]; then
+  echo "env.sh: can't read $ENV_FILE" >&2
+  exit 1
+fi
 
-# Read each line in .env file
-# Each line represents key=value pairs
-while read -r line || [[ -n "$line" ]];
-do
-  # Split env variables by character `=`
-  if printf '%s\n' "$line" | grep -q -e '='; then
-    varname=$(printf '%s\n' "$line" | sed -e 's/=.*//')
-    varvalue=$(printf '%s\n' "$line" | sed -e 's/^[^=]*=//')
-  fi
+# escapes a value for a double quoted JS string
+js_escape() {
+  printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'
+}
 
-  # Read value of current variable if exists as Environment variable
-  value=$(printf '%s\n' "${!varname}")
-  # Otherwise use value from .env file
-  [[ -z $value ]] && value=${varvalue}
-  
-  # Append configuration property to JS file
-  echo "  $varname: \"$value\"," >> ./env-config.js
-done < .env
+tmp_file="$OUTPUT_FILE.tmp"
+{
+  echo "window._env_ = {"
+  # '|| [ -n "$line" ]' keeps a last line without a trailing newline
+  while IFS= read -r line || [ -n "$line" ]; do
+    # Windows line endings
+    line=$(printf '%s' "$line" | tr -d '\r')
+    # skip blank lines, comments and anything that isn't KEY=value
+    printf '%s\n' "$line" | grep -Eq '^[A-Za-z_][A-Za-z0-9_]*=' || continue
 
-echo "};\n" >> ./env-config.js
+    varname=${line%%=*}
+    value=$(printenv "$varname" || true)
+    [ -n "$value" ] || value=${line#*=}
+
+    printf '  %s: "%s",\n' "$varname" "$(js_escape "$value")"
+  done < "$ENV_FILE"
+  echo "};"
+} > "$tmp_file"
+
+# replace in one step, nginx may already be serving the old file
+mv -f "$tmp_file" "$OUTPUT_FILE"
+echo "env.sh: wrote $OUTPUT_FILE"

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rhc-fe-config
+  namespace: rhc
+  labels:
+    app.kubernetes.io/part-of: romania-health-catalog
+    app.kubernetes.io/name: rhc-fe
+data:
+  # turned into env-config.js (window._env_) by env.sh when the container starts, the FE appends /backend
+  API_URL: https://rhc-api.talaatharb.net

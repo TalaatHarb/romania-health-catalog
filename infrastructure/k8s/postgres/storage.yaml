@@ -1,0 +1,38 @@
+# Postgres data lives in a directory on one node (hostPath), so the database pod is pinned to that node.
+# Replace the node name (kubectl get nodes). The directory is created if missing (DirectoryOrCreate).
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: rhc-host-storage
+  labels:
+    app.kubernetes.io/part-of: romania-health-catalog
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: rhc-postgres-data
+  labels:
+    app.kubernetes.io/part-of: romania-health-catalog
+    app.kubernetes.io/name: rhc-postgres
+spec:
+  capacity:
+    # every imported version adds a few hundred thousand drugs and catalog objects
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: rhc-host-storage
+  hostPath:
+    path: /data/rhc/postgres
+    type: DirectoryOrCreate
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - CHANGE-ME-node-name

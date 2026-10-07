@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# secrets are applied separately (see README.md), secrets-example.yaml is intentionally not listed
+resources:
+  - 00-namespace.yaml
+  - postgres/storage.yaml
+  - postgres/statefulset.yaml
+  - backend/configmap.yaml
+  - backend/deployment.yaml
+  - backend/service.yaml
+  - frontend/configmap.yaml
+  - frontend/deployment.yaml
+  - frontend/service.yaml
+  - ingress.yaml

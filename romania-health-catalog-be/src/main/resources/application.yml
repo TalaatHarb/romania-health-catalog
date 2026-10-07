@@ -60,3 +60,6 @@ springdoc:
 health-catalog:
   # required (header or query/form parameter 'uploadSecret') to upload catalogs; override with UPLOAD_SECRET
   upload-secret: ${UPLOAD_SECRET:UPLOAD_SECREET}
+  cors:
+    # origins (comma separated, patterns like https://*.example.com allowed) the SPA may call the API from
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:*}

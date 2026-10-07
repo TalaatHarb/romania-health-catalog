@@ -1,0 +1,10 @@
+target
+db
+*.log
+.vscode
+.idea
+.settings
+.project
+.classpath
+Dockerfile
+.dockerignore

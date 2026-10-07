@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rhc-be-config
+  namespace: rhc
+  labels:
+    app.kubernetes.io/part-of: romania-health-catalog
+    app.kubernetes.io/name: rhc-be
+data:
+  SPRING_PROFILES_ACTIVE: postgres
+  # the database name must match POSTGRES_DB in rhc-db-secret
+  DB_URL: jdbc:postgresql://rhc-postgres:5432/health_catalog?reWriteBatchedInserts=true
+  # only the SPA may call the API from a browser (comma separated, patterns like https://*.talaatharb.net allowed)
+  CORS_ALLOWED_ORIGINS: https://rhc.talaatharb.net
+  # TLS ends at the ingress, use its X-Forwarded-* headers for redirects and generated links (swagger)
+  SERVER_FORWARD_HEADERS_STRATEGY: framework
+  # don't expose env, heapdump, ... through the public ingress, health is needed for the probes
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info
+  LOGGING_LEVEL_NET_TALAATHARB: INFO
+  LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: INFO
+  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=75

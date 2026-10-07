@@ -142,5 +142,38 @@ profile (`application-postgres.yml`) switches to PostgreSQL. The database has to
 and updates the tables and indexes (`ddl-auto: update`). The queries are plain JPQL, so nothing is
 database-specific.
 
+The API answers CORS requests itself, allowing the origins in `CORS_ALLOWED_ORIGINS` (comma separated, patterns
+allowed). The default `*` allows any origin, for the Vite dev server and the e2e tests.
+
+### Docker images
+```shell
+docker build -t rhc-be romania-health-catalog-be
+docker build -t rhc-fe romania-health-catalog-fe
+
+docker run -p 8080:8080 -e UPLOAD_SECRET=my-secret rhc-be       # H2 in /app/db, add -e SPRING_PROFILES_ACTIVE=postgres -e DB_URL=... for PostgreSQL
+docker run -p 5173:8080 -e API_URL=http://localhost:8080 rhc-fe  # API_URL is written to env-config.js on start
+```
+
+The FE image runs `env.sh` before nginx starts. For every key in `.env` it uses the environment variable of the
+same name if it's set, otherwise the `.env` value, and writes the result to `env-config.js` (`window._env_`).
+
+### Releases
+Pushing a `v*` tag runs `.github/workflows/release.yml`, which:
+
+1. runs the BE and FE tests;
+2. publishes multi-arch (amd64/arm64) images to `ghcr.io/<owner>/romania-health-catalog-be` and
+   `ghcr.io/<owner>/romania-health-catalog-fe`, tagged `1.2.0`, `1.2`, `1` and `latest`;
+3. creates a GitHub release.
+
+Pre-release tags such as `v1.3.0-rc.1` only get their own version tag.
+```shell
+git tag v1.0.0 && git push origin v1.0.0
+```
+
+### Kubernetes
+`infrastructure/k8s` deploys the app with PostgreSQL behind ingress-nginx and cert-manager, on
+https://rhc.talaatharb.net (FE) and https://rhc-api.talaatharb.net (BE). See
+[infrastructure/k8s/README.md](infrastructure/k8s/README.md).
+
 The search scenarios import the sample catalog themselves if it isn't available yet, so any scenario can run on
 its own and in any order.

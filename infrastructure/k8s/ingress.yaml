@@ -1,0 +1,65 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rhc-fe
+  namespace: rhc
+  labels:
+    app.kubernetes.io/part-of: romania-health-catalog
+    app.kubernetes.io/name: rhc-fe
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - rhc.talaatharb.net
+      secretName: rhc-fe-tls
+  rules:
+    - host: rhc.talaatharb.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: rhc-fe
+                port:
+                  name: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rhc-be
+  namespace: rhc
+  labels:
+    app.kubernetes.io/part-of: romania-health-catalog
+    app.kubernetes.io/name: rhc-be
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # CORS is answered by the backend (CORS_ALLOWED_ORIGINS), don't enable nginx's CORS too or the
+    # browser gets duplicated Access-Control-Allow-Origin headers and rejects the response.
+    # Errors produced by nginx itself (413, 502, 504) carry no CORS headers and show up as CORS errors
+    # in the browser, so allow the backend's 50MB uploads and long imports here.
+    nginx.ingress.kubernetes.io/proxy-body-size: 50m
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - rhc-api.talaatharb.net
+      secretName: rhc-be-tls
+  rules:
+    - host: rhc-api.talaatharb.net
+      http:
+        paths:
+          - path: /backend
+            pathType: Prefix
+            backend:
+              service:
+                name: rhc-be
+                port:
+                  name: http
