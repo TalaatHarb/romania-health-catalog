@@ -7,14 +7,17 @@ interface ImportButtonProps {
     titleText?: string;
     defaultUploadSecret?: string;
     fileChangeCallback?: (file: File, uploadSecret: string) => Promise<Version>;
+    urlUploadCallback?: (url: string, uploadSecret: string) => Promise<Version>;
 }
 
-function ImportButton({ buttonText = '+', fileChangeCallback = () => Promise.resolve({ version: new Date(), id: '1' }), titleText = 'Import file', defaultUploadSecret = environment.defaultUploadSecret }: Readonly<ImportButtonProps>) {
+function ImportButton({ buttonText = '+', fileChangeCallback = () => Promise.resolve({ version: new Date(), id: '1' }), urlUploadCallback, titleText = 'Import file', defaultUploadSecret = environment.defaultUploadSecret }: Readonly<ImportButtonProps>) {
 
     const [loading, setLoading] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
     const [uploadSecret, setUploadSecret] = useState(defaultUploadSecret);
     const [uploadError, setUploadError] = useState<string | undefined>(undefined);
+    const [source, setSource] = useState('file');
+    const [catalogUrl, setCatalogUrl] = useState('');
 
     function onFileChange(event: FormEvent<HTMLInputElement>): void {
         const input: HTMLInputElement = event.target as HTMLInputElement;
@@ -33,11 +36,20 @@ function ImportButton({ buttonText = '+', fileChangeCallback = () => Promise.res
     }
 
     async function handleUpload(): Promise<void> {
-        if (!selectedFile || !uploadSecret) return;
+        if (!uploadSecret || (source === 'file' ? !selectedFile : !catalogUrl.trim())) return;
+        if (source === 'url') {
+            const input = document.getElementById('catalog-url') as HTMLInputElement | null;
+            if (!input?.reportValidity()) return;
+        }
         setUploadError(undefined);
         setLoading(true);
         try {
-            await fileChangeCallback(selectedFile, uploadSecret);
+            if (source === 'url') {
+                if (!urlUploadCallback) throw new Error('URL imports are unavailable');
+                await urlUploadCallback(catalogUrl.trim(), uploadSecret);
+            } else if (selectedFile) {
+                await fileChangeCallback(selectedFile, uploadSecret);
+            }
         } catch (e) {
             // keep the dialog and the selected file so the upload can be retried (e.g. with the right secret)
             setUploadError(e instanceof Error ? e.message : String(e));
@@ -46,6 +58,7 @@ function ImportButton({ buttonText = '+', fileChangeCallback = () => Promise.res
             setLoading(false);
         }
         setSelectedFile(undefined);
+        setCatalogUrl('');
         // reset file input value so same file can be selected again
         const input = document.getElementById('file-upload') as HTMLInputElement | null;
         if (input) input.value = '';
@@ -68,6 +81,17 @@ function ImportButton({ buttonText = '+', fileChangeCallback = () => Promise.res
                             <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" disabled={loading}></button>
                         </div>
                         <div className="modal-body">
+                            {urlUploadCallback && (
+                                <div className="mb-3">
+                                    <label htmlFor="upload-source" className="form-label">Import from</label>
+                                    <select id="upload-source" className="form-select" value={source} disabled={loading}
+                                        onChange={event => { setSource(event.target.value); setUploadError(undefined); }}>
+                                        <option value="file">File</option>
+                                        <option value="url">URL</option>
+                                    </select>
+                                </div>
+                            )}
+                            {source === 'file' ? (
                             <div className="mb-3">
                                 <label htmlFor="file-upload" className="form-label">{titleText}</label>
                                 <input className="form-control" type="file" id="file-upload" onChange={onFileChange} disabled={loading} />
@@ -77,6 +101,17 @@ function ImportButton({ buttonText = '+', fileChangeCallback = () => Promise.res
                                     <div className="small text-muted mt-2">No file selected</div>
                                 )}
                             </div>
+                            ) : (
+                                <div className="mb-3">
+                                    <label htmlFor="catalog-url" className="form-label">Catalog URL</label>
+                                    <div id="catalog-url-help" className="form-text mb-2">
+                                        HTTPS link to XML or ZIP on a server-approved host. The backend downloads and imports it; keep this dialog open until it finishes.
+                                    </div>
+                                    <input id="catalog-url" className="form-control" type="url" pattern="https://.*" required
+                                        aria-describedby="catalog-url-help" value={catalogUrl} disabled={loading}
+                                        onChange={event => { setCatalogUrl(event.target.value); setUploadError(undefined); }} />
+                                </div>
+                            )}
                             <div className="mb-3">
                                 <label htmlFor="upload-secret" className="form-label">Upload secret</label>
                                 <input className="form-control" type="password" id="upload-secret" autoComplete="off" spellCheck={false}
@@ -92,11 +127,11 @@ function ImportButton({ buttonText = '+', fileChangeCallback = () => Promise.res
                         </div>
                         <div className="modal-footer">
                             <button id="dismiss-modal" type="button" className="btn btn-secondary" data-bs-dismiss="modal" disabled={loading}>Close</button>
-                            <button id="upload-button" type="button" className="btn btn-primary" onClick={handleUpload} disabled={!selectedFile || !uploadSecret || loading}>
+                            <button id="upload-button" type="button" className="btn btn-primary" onClick={handleUpload} disabled={(source === 'file' ? !selectedFile : !catalogUrl.trim()) || !uploadSecret || loading}>
                                 {loading ? (
                                     <>
                                         <span id="loading" className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>{' '}
-                                        Uploading...
+                                        {source === 'url' ? 'Downloading and importing...' : 'Uploading...'}
                                     </>
                                 ) : 'Upload'}
                             </button>

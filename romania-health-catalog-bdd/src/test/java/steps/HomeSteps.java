@@ -48,6 +48,11 @@ public class HomeSteps {
 		assertTrue(uploadError.contains(expectedError), "Unexpected upload error: " + uploadError);
 	}
 
+	@When("I try to import catalog URL {string} using upload secret {string}")
+	public void tryingToImportUrl(String url, String uploadSecret) {
+		uploadError = homePage.importUrlWithSecret(url, uploadSecret);
+	}
+
 	@Then("I confirm {string} gets added to the top of the list of available catalogs")
 	public void iFindTheNewVersionInTheListOfVersions(String issueDate) {
 		homePage.clickOnVersionsMenu();

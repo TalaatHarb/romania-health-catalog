@@ -38,6 +38,12 @@ public class HomePageElementsLocator {
 
 	@FindBy(xpath = "//*[@id=\"upload-error\"]")
 	public WebElement uploadError;
+
+	@FindBy(id = "upload-source")
+	public WebElement uploadSource;
+
+	@FindBy(id = "catalog-url")
+	public WebElement catalogUrl;
 	
 	@FindBy(xpath = "//*[@id=\"loading\"]")
 	public WebElement loadingIndicator;

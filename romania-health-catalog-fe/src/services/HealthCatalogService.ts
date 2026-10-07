@@ -64,6 +64,18 @@ async function uploadFile(file: File, uploadSecret: string): Promise<Version> {
     return CatalogVersionToVersion.catalogVersionToVersion(json);
 }
 
+async function uploadUrl(url: string, uploadSecret: string): Promise<Version> {
+    const json = await fetchJson<CatalogVersion>(`${VERSIONS_API}/from-url`, {
+        method: "POST",
+        headers: {
+            [UPLOAD_SECRET_HEADER]: uploadSecret,
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ url }),
+    });
+    return CatalogVersionToVersion.catalogVersionToVersion(json);
+}
+
 async function searchForDrug(versionId: string, searchTerm: string, pageable: Pageable = { page: 0, size: DEFAULT_PAGE_SIZE }): Promise<Page<Drug>>{
     const searchApiURL = `${VERSIONS_API}/${versionId}${DRUGS_API}?${pageQuery(searchTerm, pageable, DEFAULT_SORT)}`;
     return fetchJson<Page<Drug>>(searchApiURL);
@@ -92,6 +104,7 @@ async function loadItem(itemId: string): Promise<CatalogItem> {
 export default {
     getAvailableVersions,
     uploadFile,
+    uploadUrl,
     searchForDrug,
     loadDrug,
     getItemTypes,

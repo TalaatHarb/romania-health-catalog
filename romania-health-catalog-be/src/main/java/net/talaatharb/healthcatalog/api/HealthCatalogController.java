@@ -16,6 +16,7 @@ import net.talaatharb.healthcatalog.dto.DrugDto;
 import net.talaatharb.healthcatalog.dto.HealthCatalogVersionDto;
 import net.talaatharb.healthcatalog.facade.HealthCatalogFacade;
 import net.talaatharb.healthcatalog.utils.FileUtils;
+import net.talaatharb.healthcatalog.service.CatalogUrlImporter;
 
 @RequiredArgsConstructor
 @RestController
@@ -25,6 +26,7 @@ public class HealthCatalogController implements HealthCatalogApi{
 	private final HealthCatalogFacade healthCatalogFacade;
 
 	private final UploadSecretVerifier uploadSecretVerifier;
+	private final CatalogUrlImporter catalogUrlImporter;
 	
 	@Override
 	public List<HealthCatalogVersionDto> getAllAvailableVersions(){
@@ -37,6 +39,12 @@ public class HealthCatalogController implements HealthCatalogApi{
 		uploadSecretVerifier.verify(uploadSecretHeader != null ? uploadSecretHeader : uploadSecretParam);
 		var catalog = FileUtils.readCatalogFromZipUpload(file);
 		return healthCatalogFacade.saveVersion(catalog);
+	}
+
+	@Override
+	public HealthCatalogVersionDto uploadUrl(String url, String uploadSecretHeader, String uploadSecretParam) {
+		uploadSecretVerifier.verify(uploadSecretHeader != null ? uploadSecretHeader : uploadSecretParam);
+		return healthCatalogFacade.saveVersion(catalogUrlImporter.download(url));
 	}
 
 	@Override

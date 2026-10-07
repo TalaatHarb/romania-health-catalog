@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.FilterInputStream;
+import java.io.PushbackInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -90,7 +92,49 @@ public class FileUtils {
 	}
 	
 	public static final Catalog readCatalogFromZipUpload(MultipartFile file) throws IOException {
-		final var contents = readXmlFromZipUpload(file);
-		return XMLUtils.fromXmlString(contents, Catalog.class);
+		if (file.isEmpty()) throw new IllegalArgumentException("Uploaded file is invalid");
+		try (var input = file.getInputStream()) {
+			return readCatalog(input);
+		}
+	}
+
+	public static Catalog readCatalog(InputStream input) throws IOException {
+		try (var stream = new PushbackInputStream(input, 2)) {
+			byte[] signature = stream.readNBytes(2);
+			stream.unread(signature);
+			if (signature.length == 2 && signature[0] == 'P' && signature[1] == 'K') {
+				try (var zip = new ZipInputStream(stream)) {
+					ZipEntry entry;
+					while ((entry = zip.getNextEntry()) != null) {
+						if (!entry.isDirectory() && entry.getName().toLowerCase(java.util.Locale.ROOT).endsWith(".xml")) {
+							return XMLUtils.createXMLObjectMapper().readValue(new LimitedXmlStream(zip), Catalog.class);
+						}
+					}
+				}
+				throw new IllegalArgumentException("No .xml file found in the zip");
+			}
+			return XMLUtils.createXMLObjectMapper().readValue(new LimitedXmlStream(stream), Catalog.class);
+		}
+	}
+
+	// Bound decompressed input as well as the downloaded archive.
+	private static class LimitedXmlStream extends FilterInputStream {
+		private long remaining = 512L * 1024 * 1024;
+
+		LimitedXmlStream(InputStream input) { super(input); }
+
+		@Override
+		public int read() throws IOException {
+			int value = in.read();
+			if (value != -1 && --remaining < 0) throw new IllegalArgumentException("Catalog XML exceeds 512 MiB");
+			return value;
+		}
+
+		@Override
+		public int read(byte[] bytes, int offset, int length) throws IOException {
+			int count = in.read(bytes, offset, (int) Math.min(length, Math.max(1, remaining)));
+			if (count > 0 && (remaining -= count) < 0) throw new IllegalArgumentException("Catalog XML exceeds 512 MiB");
+			return count;
+		}
 	}
 }

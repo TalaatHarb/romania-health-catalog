@@ -8,6 +8,7 @@ metadata:
     app.kubernetes.io/name: rhc-be
 data:
   SPRING_PROFILES_ACTIVE: postgres
+  CATALOG_IMPORT_ALLOWED_HOSTS: www.casmb.ro,www.cnas.ro
   # the database name must match POSTGRES_DB in rhc-db-secret
   DB_URL: jdbc:postgresql://rhc-postgres:5432/health_catalog?reWriteBatchedInserts=true
   # only the SPA may call the API from a browser (comma separated, patterns like https://*.talaatharb.net allowed)

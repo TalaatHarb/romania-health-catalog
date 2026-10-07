@@ -92,5 +92,8 @@ uploads because of the `uploadSecret` header.
   `/backend/actuator/health/liveness` and `/backend/actuator/health/readiness`.
 - The FE upload dialog is pre-filled with the development default `UPLOAD_SECREET`. Type the real upload
   secret from `rhc-upload-secret` there.
+- The dialog also accepts a catalog URL. The backend downloads it and returns the imported version in the
+  same request. `CATALOG_IMPORT_ALLOWED_HOSTS` in the backend ConfigMap restricts downloads and redirects to
+  `www.casmb.ro,www.cnas.ro`; add any other trusted source hosts explicitly. Downloads require outbound HTTPS.
 - ConfigMaps are read only when a container starts. After changing `frontend/configmap.yaml`, run
   `kubectl -n rhc rollout restart deployment rhc-fe`; for `backend/configmap.yaml`, restart `rhc-be`.

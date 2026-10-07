@@ -58,6 +58,8 @@ springdoc:
     url: '/v3/api-docs'
 
 health-catalog:
+  import:
+    allowed-hosts: ${CATALOG_IMPORT_ALLOWED_HOSTS:www.casmb.ro,www.cnas.ro}
   # required (header or query/form parameter 'uploadSecret') to upload catalogs; override with UPLOAD_SECRET
   upload-secret: ${UPLOAD_SECRET:UPLOAD_SECREET}
   cors:

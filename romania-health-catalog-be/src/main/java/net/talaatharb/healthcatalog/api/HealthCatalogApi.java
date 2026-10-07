@@ -39,6 +39,12 @@ public interface HealthCatalogApi {
 			@RequestHeader(name = UploadSecretVerifier.UPLOAD_SECRET, required = false) String uploadSecretHeader,
 			@RequestParam(name = UploadSecretVerifier.UPLOAD_SECRET, required = false) String uploadSecretParam)
 			throws IOException;
+
+	@PostMapping("/versions/from-url")
+	@ResponseStatus(HttpStatus.CREATED)
+	HealthCatalogVersionDto uploadUrl(@RequestParam String url,
+			@RequestHeader(name = UploadSecretVerifier.UPLOAD_SECRET, required = false) String uploadSecretHeader,
+			@RequestParam(name = UploadSecretVerifier.UPLOAD_SECRET, required = false) String uploadSecretParam);
 	
 	@GetMapping(path = "/versions/{versionId}/drugs", produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.OK)

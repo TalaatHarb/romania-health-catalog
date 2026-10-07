@@ -59,6 +59,12 @@ function App() {
     return version;
   }
 
+  async function uploadUrl(url: string, uploadSecret: string): Promise<Version> {
+    const version = await HealthCatalogService.uploadUrl(url, uploadSecret);
+    fetchVersions();
+    return version;
+  }
+
   async function runSearch(params: SearchParams, pageNumber: number = 0): Promise<void> {
     setLastSearch(params);
     setLoading(true);
@@ -98,7 +104,7 @@ function App() {
             <p className="app-subtitle mb-0">Browse drugs, cities, streets, physicians and every other nomenclature of the CNAS catalog</p>
           </div>
           <div>
-            <ImportButton fileChangeCallback={uploadFile} />
+            <ImportButton fileChangeCallback={uploadFile} urlUploadCallback={uploadUrl} />
           </div>
         </div>
       </header>

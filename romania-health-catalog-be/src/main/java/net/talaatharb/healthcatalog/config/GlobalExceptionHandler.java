@@ -13,6 +13,14 @@ import net.talaatharb.healthcatalog.config.UploadSecretVerifier.InvalidUploadSec
 @Slf4j
 public class GlobalExceptionHandler {
 
+	@ExceptionHandler(net.talaatharb.healthcatalog.service.CatalogUrlImporter.DownloadException.class)
+	public ProblemDetail handleDownloadException(net.talaatharb.healthcatalog.service.CatalogUrlImporter.DownloadException ex) {
+		log.warn("Catalog URL import failed: {}", ex.getMessage());
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, ex.getMessage());
+		problem.setTitle("Catalog download failed");
+		return problem;
+	}
+
 	@ExceptionHandler(IllegalArgumentException.class)
 	public ProblemDetail handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
 		log.error("IllegalArgumentException: {}", ex.getMessage());

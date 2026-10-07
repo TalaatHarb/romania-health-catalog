@@ -91,6 +91,7 @@ selecting one shows all of its properties.
 | --- | --- | --- |
 | GET | `/versions` | Uploaded versions |
 | POST | `/versions` | Upload a catalog (`multipart/form-data`, field `file`, `.xml` or `.zip`); requires the upload secret |
+| POST | `/versions/from-url` | Download and import an XML or ZIP catalog; form field `url`, same upload secret header/parameter |
 | GET | `/versions/{versionId}/drugs?searchTerm=&page=&size=&sort=` | Search active drugs by name or code |
 | GET | `/drugs/{drugId}` | Drug details |
 | GET | `/versions/{versionId}/item-types` | Searchable object types with their counts for a version |
@@ -111,6 +112,24 @@ parameter. If both are sent, the header wins. A missing or wrong secret gets a `
 
 ```shell
 curl -H "uploadSecret: UPLOAD_SECREET" -F "file=@catalog.zip" http://localhost:8080/backend/api/v1/versions
+```
+
+### Import from a URL
+Choose **URL** in the upload dialog, enter an HTTPS catalog link and the upload secret. The backend downloads
+and processes the document, so the browser sends only the URL, not the file. This is synchronous: keep the
+dialog open until the version is returned. The existing ingress timeout still applies.
+
+`CATALOG_IMPORT_ALLOWED_HOSTS` is a comma-separated list of exact download hostnames, defaulting to
+`www.casmb.ro,www.cnas.ro`. Only HTTPS on port 443 is accepted, without embedded credentials or fragments.
+Every redirect is checked against the same allowlist (at most five redirects). Downloads are limited to
+50 MiB, with a 10-second connect timeout, 30-second read timeout, and a two-minute download budget checked
+between reads/redirects. Uncompressed XML is limited to 512 MiB. Temporary download files are deleted after
+processing. XML is parsed directly from a stream for both URL and file imports, but the parsed catalog still
+occupies heap memory. Download failures return a `502` problem response; invalid hosts and size limits return
+`400`, and a missing or invalid secret returns `403` before any download.
+
+```shell
+curl -H "uploadSecret: UPLOAD_SECREET" --data-urlencode "url=https://www.casmb.ro/catalog.zip" http://localhost:8080/backend/api/v1/versions/from-url
 ```
 
 ### Running locally

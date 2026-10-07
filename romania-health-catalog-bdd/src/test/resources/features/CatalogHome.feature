@@ -18,6 +18,18 @@ Feature: Romania Home page scenarios
     Given I am on Catalog 'Home' page
     When I try to import catalog with issue date '2024 - 3' using upload secret 'WRONG_SECRET'
     Then I see the upload error 'Missing or invalid upload secret'
+
+  @Home @Import @UrlImport
+  Scenario: URL imports require the upload secret
+    Given I am on Catalog 'Home' page
+    When I try to import catalog URL 'https://www.casmb.ro/catalog.zip' using upload secret 'WRONG_SECRET'
+    Then I see the upload error 'Missing or invalid upload secret'
+
+  @Home @Import @UrlImport
+  Scenario: URL imports reject an unapproved download host
+    Given I am on Catalog 'Home' page
+    When I try to import catalog URL 'https://localhost/catalog.zip' using upload secret 'UPLOAD_SECREET'
+    Then I see the upload error 'Catalog URL must use HTTPS on an allowed download host'
     
   @Home @Search @Drugs
   Scenario: Search for a drug

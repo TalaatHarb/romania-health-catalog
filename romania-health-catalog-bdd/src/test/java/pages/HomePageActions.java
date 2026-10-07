@@ -92,6 +92,23 @@ public class HomePageActions {
 		return error;
 	}
 
+	public String importUrlWithSecret(String url, String uploadSecret) {
+		synchronized (IMPORT_LOCK) {
+			homePageElements.importButton.click();
+			PageUtils.waitUntilVisible(webDriver, homePageElements.uploadSource);
+			new Select(homePageElements.uploadSource).selectByValue("url");
+			homePageElements.catalogUrl.sendKeys(url);
+			homePageElements.uploadSecretInput.clear();
+			homePageElements.uploadSecretInput.sendKeys(uploadSecret);
+			homePageElements.uploadButton.click();
+			PageUtils.waitUntilVisible(webDriver, homePageElements.uploadError);
+			String error = homePageElements.uploadError.getText();
+			homePageElements.closeModalButton.click();
+			PageUtils.waitUntilElementVanish(webDriver, homePageElements.modal);
+			return error;
+		}
+	}
+
 	/**
 	 * Imports the catalog of the given issue date unless it was already imported
 	 */

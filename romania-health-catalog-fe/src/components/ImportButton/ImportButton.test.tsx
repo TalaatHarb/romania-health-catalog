@@ -240,4 +240,35 @@ describe('ImportButton', () => {
 
         expect(document.getElementById('upload-error')).toBeNull();
     });
+
+    test('imports from URL using the entered secret without a file', async () => {
+        const callback = jest.fn().mockResolvedValue({ version: new Date(), id: '1' });
+        const fileCallback = jest.fn();
+        render(<ImportButton urlUploadCallback={callback} fileChangeCallback={fileCallback} />);
+        fireEvent.change(screen.getByLabelText('Import from'), { target: { value: 'url' } });
+        fireEvent.change(screen.getByLabelText('Catalog URL'), { target: { value: 'https://www.casmb.ro/catalog.zip' } });
+        fireEvent.change(secretInput(), { target: { value: 'my-secret' } });
+        fireEvent.click(document.getElementById('upload-button') as HTMLButtonElement);
+        await waitFor(() => expect(callback).toHaveBeenCalledWith('https://www.casmb.ro/catalog.zip', 'my-secret'));
+        expect(fileCallback).not.toHaveBeenCalled();
+    });
+
+    test('keeps the URL and displays a failed URL import', async () => {
+        const callback = jest.fn().mockRejectedValue(new Error('Catalog download failed'));
+        render(<ImportButton urlUploadCallback={callback} />);
+        fireEvent.change(screen.getByLabelText('Import from'), { target: { value: 'url' } });
+        fireEvent.change(screen.getByLabelText('Catalog URL'), { target: { value: 'https://www.casmb.ro/catalog.zip' } });
+        fireEvent.click(document.getElementById('upload-button') as HTMLButtonElement);
+        await screen.findByText('Upload failed: Catalog download failed');
+        expect(screen.getByLabelText('Catalog URL')).toHaveValue('https://www.casmb.ro/catalog.zip');
+    });
+
+    test('does not submit an invalid URL', () => {
+        const callback = jest.fn();
+        render(<ImportButton urlUploadCallback={callback} />);
+        fireEvent.change(screen.getByLabelText('Import from'), { target: { value: 'url' } });
+        fireEvent.change(screen.getByLabelText('Catalog URL'), { target: { value: 'http://www.casmb.ro/catalog.zip' } });
+        fireEvent.click(document.getElementById('upload-button') as HTMLButtonElement);
+        expect(callback).not.toHaveBeenCalled();
+    });
 });
