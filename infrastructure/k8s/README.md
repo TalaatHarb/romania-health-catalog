@@ -74,6 +74,18 @@ uploads because of the `uploadSecret` header.
 
 ## Notes
 
+- The backend reserves and is limited to 8 GiB of container memory, with a 6 GiB Java heap
+  (`JAVA_TOOL_OPTIONS` in `backend/configmap.yaml`). The remaining 2 GiB is for native JVM memory and other
+  container overhead. The node needs enough allocatable memory for this request alongside PostgreSQL and
+  the other pods; otherwise the backend stays Pending. Rolling updates can temporarily need two backend pods.
+  Imports still hold the uncompressed XML and parsed objects in memory, so larger or concurrent imports can
+  exceed this budget. Heap exhaustion exits the JVM so Kubernetes can restart it.
+  To apply the memory change without rebuilding the image:
+  ```shell
+  kubectl apply -k infrastructure/k8s
+  kubectl -n rhc rollout restart deployment rhc-be
+  kubectl -n rhc rollout status deployment rhc-be
+  ```
 - The backend starts with the `postgres` profile, and Hibernate creates or updates the schema. Keep one backend
   replica, so only one instance changes the schema at a time.
 - Only the `health` and `info` actuator endpoints are exposed. The probes use

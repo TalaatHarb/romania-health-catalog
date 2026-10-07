@@ -18,4 +18,6 @@ data:
   MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info
   LOGGING_LEVEL_NET_TALAATHARB: INFO
   LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: INFO
-  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=75
+  # Pair the 6 GiB heap with the deployment's 8 GiB memory limit; leave room for native memory.
+  # Restart on heap exhaustion rather than keeping a potentially unhealthy JVM running.
+  JAVA_TOOL_OPTIONS: -Xms512m -Xmx6g -XX:+ExitOnOutOfMemoryError

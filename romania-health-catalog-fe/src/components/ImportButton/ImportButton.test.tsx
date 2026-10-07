@@ -190,6 +190,7 @@ describe('ImportButton', () => {
     test('upload secret is pre-filled with the default secret', () => {
         render(<ImportButton />);
 
+        expect(secretInput()).toHaveAttribute('type', 'password');
         expect(secretInput().value).toBe('UPLOAD_SECREET');
         expect(screen.getByLabelText('Upload secret')).toBe(secretInput());
     });

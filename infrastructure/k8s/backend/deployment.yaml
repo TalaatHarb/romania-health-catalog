@@ -58,10 +58,11 @@ spec:
           resources:
             requests:
               cpu: 250m
-              memory: 768Mi
-            limits:
-              # catalog uploads parse the whole XML in memory
+              # Reserve enough node memory for a full-size catalog import.
               memory: 2Gi
+            limits:
+              # Whole XML imports need a 6 GiB heap plus native JVM/container memory.
+              memory: 8Gi
           # schema/index updates on a big database can take a while on the first start of a new version
           startupProbe:
             httpGet:

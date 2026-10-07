@@ -79,7 +79,7 @@ function ImportButton({ buttonText = '+', fileChangeCallback = () => Promise.res
                             </div>
                             <div className="mb-3">
                                 <label htmlFor="upload-secret" className="form-label">Upload secret</label>
-                                <input className="form-control" type="text" id="upload-secret" autoComplete="off" spellCheck={false}
+                                <input className="form-control" type="password" id="upload-secret" autoComplete="off" spellCheck={false}
                                     value={uploadSecret} onChange={onSecretChange} disabled={loading} required
                                     aria-invalid={uploadError ? true : undefined} aria-describedby="upload-secret-help" />
                                 <div id="upload-secret-help" className="form-text">Required by the server to accept uploads.</div>
