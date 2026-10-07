@@ -94,11 +94,18 @@ selecting one shows all of its properties.
 | POST | `/versions/from-url` | Download and import an XML or ZIP catalog; form field `url`, same upload secret header/parameter |
 | GET | `/versions/{versionId}/drugs?searchTerm=&page=&size=&sort=` | Search active drugs by name or code |
 | GET | `/drugs/{drugId}` | Drug details |
+| GET | `/drugs/{drugId}/details` | Additional restrictions, pricing, insurance/copayment lists and therapeutic protocols |
 | GET | `/versions/{versionId}/item-types` | Searchable object types with their counts for a version |
 | GET | `/versions/{versionId}/items?type=CITY&searchTerm=&page=&size=&sort=` | Search objects of a type by name or code |
 | GET | `/items/{itemId}` | Object details |
 
 OpenAPI docs: `http://localhost:8080/backend/swagger-ui/index.html`.
+
+Additional drug details use the catalog's numeric `isNarcotic` flag: positive values (including `1` and `2`)
+are restricted/narcotic, while `0` or a missing flag is not. Classification follows the selected catalog record,
+not a guess based on its brand name. Insurance/copayment entries remove exact duplicates while preserving
+insertion order and entries with different sources, dates, pricing or other details. The JSON `insurance`
+field remains an array.
 
 ### Upload secret
 Uploads are only accepted with the upload secret, sent as the `uploadSecret` header or the `uploadSecret` query

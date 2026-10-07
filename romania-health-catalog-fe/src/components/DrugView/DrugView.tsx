@@ -65,7 +65,7 @@ function DrugView(props: Readonly<DrugViewProps>) {
         <div className="mt-3">
           <div className="small text-muted">Flags:</div>
           <div className="mt-1">
-            {drug.isNarcotic === 1 ? <span className="badge bg-danger me-1">Narcotic</span> : ''}
+            {drug.isNarcotic > 0 ? <span className="badge bg-danger me-1">Narcotic</span> : ''}
             {drug.isSpecial ? <span className="badge bg-warning text-dark me-1">Special</span> : ''}
             {drug.isBrand ? <span className="badge bg-info text-dark me-1">Brand</span> : ''}
             {drug.hasBioEchiv ? <span className="badge bg-success me-1">Bio equiv</span> : ''}

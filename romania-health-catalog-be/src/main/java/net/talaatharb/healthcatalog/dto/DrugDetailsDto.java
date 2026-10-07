@@ -3,8 +3,10 @@ package net.talaatharb.healthcatalog.dto;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import lombok.Data;
@@ -20,7 +22,7 @@ public class DrugDetailsDto implements Serializable {
 	private Atc atc;
 	private Restrictions restrictions = new Restrictions();
 	private Pricing pricing = new Pricing();
-	private List<Insurance> insurance = new ArrayList<>();
+	private Set<Insurance> insurance = new LinkedHashSet<>();
 	private List<Map<String, Object>> protocols = new ArrayList<>();
 
 	@Data

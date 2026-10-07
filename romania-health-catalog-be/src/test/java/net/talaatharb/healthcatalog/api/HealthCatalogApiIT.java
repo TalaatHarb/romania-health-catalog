@@ -7,9 +7,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.ResultActions;
@@ -17,6 +23,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import net.talaatharb.healthcatalog.config.UploadSecretVerifier;
 import net.talaatharb.healthcatalog.constants.ApiConstants;
+import net.talaatharb.healthcatalog.utils.FileUtils;
 
 class HealthCatalogApiIT extends AbstractAPIIT{
 
@@ -249,5 +256,32 @@ class HealthCatalogApiIT extends AbstractAPIIT{
 	void testGetDrugDetails_UnknownDrug_IsNotFound() throws Exception {
 		mvc.perform(get(ApiConstants.API_V1 + "/drugs/" + UUID.randomUUID() + "/details")
 				.accept(MediaType.APPLICATION_JSON)).andExpect(status().isNotFound());
+	}
+
+	@ParameterizedTest
+	@ValueSource(ints = {1, 2})
+	void testGetDrugDetails_PositiveCatalogNarcoticFlag(int flag) throws Exception {
+		String xml = FileUtils.readXmlFromZipResource("Sample.zip")
+				.replace("isNarcotic=\"0\"", "isNarcotic=\"" + flag + "\"");
+		var archive = new ByteArrayOutputStream();
+		try (var zip = new ZipOutputStream(archive)) {
+			zip.putNextEntry(new ZipEntry("catalog.xml"));
+			zip.write(xml.getBytes(StandardCharsets.UTF_8));
+			zip.closeEntry();
+		}
+		var file = new MockMultipartFile("file", "catalog.zip", "application/zip", archive.toByteArray());
+		String version = mvc.perform(multipart(ApiConstants.VERSIONS_API_V1).file(file)
+				.header(UploadSecretVerifier.UPLOAD_SECRET, DEFAULT_UPLOAD_SECRET))
+				.andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+		String versionId = objectMapper.readTree(version).get("id").asText();
+		String drugs = mvc.perform(get(ApiConstants.API_V1 + "/versions/" + versionId + "/drugs")
+				.param("searchTerm", "").param("size", "1"))
+				.andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+		String drugId = objectMapper.readTree(drugs).get("content").get(0).get("id").asText();
+		mvc.perform(get(ApiConstants.API_V1 + "/drugs/" + drugId))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.isNarcotic").value(flag));
+		mvc.perform(get(ApiConstants.API_V1 + "/drugs/" + drugId + "/details"))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.restrictions.narcotic").value(true))
+				.andExpect(jsonPath("$.insurance").isArray());
 	}
 }

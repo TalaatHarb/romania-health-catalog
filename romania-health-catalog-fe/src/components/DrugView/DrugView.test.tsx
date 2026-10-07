@@ -70,12 +70,12 @@ describe('DrugView', () => {
         expect(screen.getByText(/5.00 RON/)).toBeDefined();
     });
 
-    test('displays narcotic badge when drug is narcotic', () => {
+    test.each([1, 2])('displays narcotic badge for catalog flag %i', (flag) => {
         const drug: Drug = {
             id: '3',
             code: 'DRG003',
             name: 'Morphine',
-            isNarcotic: 1,
+            isNarcotic: flag,
             qtyPerPackage: 10,
             pricePerPackage: 50,
             validFrom: new Date('2023-01-01'),
@@ -89,6 +89,16 @@ describe('DrugView', () => {
         render(<DrugView drug={drug} />);
 
         expect(screen.getByText('Narcotic')).toBeDefined();
+    });
+
+    test('does not display narcotic badge for an unflagged drug', () => {
+        const drug: Drug = {
+            id: 'unflagged', code: 'DRG004', name: 'Unflagged drug', isNarcotic: 0,
+            qtyPerPackage: 10, pricePerPackage: 5, validFrom: new Date('2024-01-01'),
+            concentration: '', pharmaceuticalForm: '', company: '', country: '', atc: '',
+        };
+        render(<DrugView drug={drug} />);
+        expect(screen.queryByText('Narcotic')).toBeNull();
     });
 
     test('displays special badge when drug is special', () => {

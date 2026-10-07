@@ -31,7 +31,7 @@ public class DrugDetailsServiceImpl implements DrugDetailsService {
 		details.setDrugId(drug.getId());
 
 		var restrictions = details.getRestrictions();
-		restrictions.setNarcotic(drug.getIsNarcotic() != null && drug.getIsNarcotic() == 1);
+		restrictions.setNarcotic(drug.getIsNarcotic() != null && drug.getIsNarcotic() > 0);
 		restrictions.setSpecial(Boolean.TRUE.equals(drug.getIsSpecial()));
 		restrictions.setPrescriptionMode(drug.getPrescriptionMode());
 
