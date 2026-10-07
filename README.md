@@ -119,6 +119,12 @@ curl -H "uploadSecret: UPLOAD_SECREET" -F "file=@catalog.zip" http://localhost:8
 cd romania-health-catalog-be
 mvn spring-boot:run
 
+# backend on PostgreSQL instead of H2
+$env:SPRING_PROFILES_ACTIVE="postgres"
+$env:DB_URL="jdbc:postgresql://localhost:5432/health_catalog?reWriteBatchedInserts=true"  # default
+$env:DB_USERNAME="health_catalog"; $env:DB_PASSWORD="health_catalog"                     # defaults
+mvn spring-boot:run
+
 # frontend (http://localhost:5173)
 cd romania-health-catalog-fe
 npm install
@@ -130,6 +136,11 @@ mvn test                                   # up to 4 browsers in parallel
 mvn test "-Dbdd.parallelism=1"             # one scenario at a time
 mvn test "-Dbrowser=firefox" "-Dsite.url=http://localhost:5173"
 ```
+
+H2 is the default database for local runs, and the integration tests always use an in-memory H2. The `postgres`
+profile (`application-postgres.yml`) switches to PostgreSQL. The database has to exist already; Hibernate creates
+and updates the tables and indexes (`ddl-auto: update`). The queries are plain JPQL, so nothing is
+database-specific.
 
 The search scenarios import the sample catalog themselves if it isn't available yet, so any scenario can run on
 its own and in any order.

@@ -1,0 +1,8 @@
+# PostgreSQL instead of the default file based H2, enable with SPRING_PROFILES_ACTIVE=postgres
+spring:
+  datasource:
+    # reWriteBatchedInserts turns the JDBC insert batches into multi-row inserts (much faster catalog uploads)
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/health_catalog?reWriteBatchedInserts=true}
+    username: ${DB_USERNAME:health_catalog}
+    password: ${DB_PASSWORD:health_catalog}
+    driver-class-name: org.postgresql.Driver
