@@ -40,7 +40,7 @@ public class CatalogItemServiceImpl implements CatalogItemService {
 	@Override
 	public long saveItems(Catalog catalog, HealthCatalogVersionEntity version) {
 		int deleted = catalogItemRepository.deleteAllByVersionId(version.getId());
-		log.debug("Removed {} previously stored items of version {}", deleted, version.getId());
+		log.info("Removed {} previously stored items of version {}", deleted, version.getId());
 
 		long saved = 0;
 		for (CatalogItemType type : getGenericTypes()) {
@@ -48,7 +48,7 @@ public class CatalogItemServiceImpl implements CatalogItemService {
 			if (xmlObjects.isEmpty()) {
 				continue;
 			}
-			log.debug("Saving {} items of type {}", xmlObjects.size(), type);
+			log.info("Saving {} items of type {}", xmlObjects.size(), type);
 			for (int start = 0; start < xmlObjects.size(); start += BATCH_SIZE) {
 				List<?> chunk = xmlObjects.subList(start, Math.min(start + BATCH_SIZE, xmlObjects.size()));
 				List<CatalogItemEntity> entities = catalogItemXmlMapper.fromXmlObjects(type, chunk);
@@ -60,6 +60,7 @@ public class CatalogItemServiceImpl implements CatalogItemService {
 				entityManager.clear();
 			}
 		}
+		log.info("Saved {} generic catalog items for version {}", saved, version.getId());
 		return saved;
 	}
 
@@ -85,5 +86,26 @@ public class CatalogItemServiceImpl implements CatalogItemService {
 	@Override
 	public List<CatalogItemType> getGenericTypes() {
 		return Arrays.stream(CatalogItemType.values()).filter(CatalogItemType::isGeneric).toList();
+	}
+
+	@Override
+	public List<CatalogItemEntity> findByName(UUID versionId, CatalogItemType type, String name) {
+		if (name == null) {
+			return List.of();
+		}
+		return catalogItemRepository.findByVersionIdAndTypeAndName(versionId, type, name);
+	}
+
+	@Override
+	public List<CatalogItemEntity> findByCode(UUID versionId, CatalogItemType type, String code) {
+		if (code == null) {
+			return List.of();
+		}
+		return catalogItemRepository.findByVersionIdAndTypeAndCode(versionId, type, code);
+	}
+
+	@Override
+	public List<CatalogItemEntity> findAllOfType(UUID versionId, CatalogItemType type) {
+		return catalogItemRepository.findByVersionIdAndType(versionId, type);
 	}
 }

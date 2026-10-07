@@ -3,6 +3,7 @@ import { Version } from "@/models/Version";
 import CatalogVersionToVersion from "@/mappers/CatalogVersionToVersion";
 import { CatalogVersion } from "@/models/CatalogVersion";
 import { Drug } from "@/models/Drug";
+import { DrugDetails } from "@/models/DrugDetails";
 import { Pageable } from "@/models/Pageable";
 import { Page } from "@/models/Page";
 import { ItemType } from "@/models/ItemType";
@@ -86,6 +87,13 @@ async function loadDrug(drugId: string): Promise<Drug>{
 }
 
 /**
+ * Fetches the additional details of a drug (ATC, restrictions, pricing, insurance, protocols)
+ */
+async function loadDrugDetails(drugId: string): Promise<DrugDetails> {
+    return fetchJson<DrugDetails>(`${API_V1}${DRUGS_API}/${drugId}/details`);
+}
+
+/**
  * Fetches all searchable object types of a version with their item counts
  */
 async function getItemTypes(versionId: string): Promise<ItemType[]> {
@@ -107,6 +115,7 @@ export default {
     uploadUrl,
     searchForDrug,
     loadDrug,
+    loadDrugDetails,
     getItemTypes,
     searchForItems,
     loadItem,

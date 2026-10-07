@@ -10,6 +10,12 @@ interface ImportButtonProps {
     urlUploadCallback?: (url: string, uploadSecret: string) => Promise<Version>;
 }
 
+function formatSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 function ImportButton({ buttonText = '+', fileChangeCallback = () => Promise.resolve({ version: new Date(), id: '1' }), urlUploadCallback, titleText = 'Import file', defaultUploadSecret = environment.defaultUploadSecret }: Readonly<ImportButtonProps>) {
 
     const [loading, setLoading] = useState(false);
@@ -69,15 +75,18 @@ function ImportButton({ buttonText = '+', fileChangeCallback = () => Promise.res
 
     return (
         <>
-            <button id="import-button" type="button" className="btn btn-success" data-bs-toggle="modal" data-bs-target="#importFileModal">
-                {buttonText}
+            <button id="import-button" type="button" className="btn btn-success import-button" data-bs-toggle="modal" data-bs-target="#importFileModal">
+                <span className="me-2" aria-hidden="true">&#8682;</span>{buttonText}
             </button>
 
             <div className="modal fade" id="importFileModal" aria-labelledby="importFileModalLabel" aria-hidden="true">
-                <div className="modal-dialog">
+                <div className="modal-dialog modal-dialog-centered">
                     <div className="modal-content">
-                        <div className="modal-header">
-                            <h5 className="modal-title" id="importFileModalLabel">{titleText}</h5>
+                        <div className="modal-header import-modal-header">
+                            <div>
+                                <h5 className="modal-title" id="importFileModalLabel">{titleText}</h5>
+                                <div className="small text-muted">Add a monthly catalog (XML or ZIP) as a new version.</div>
+                            </div>
                             <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" disabled={loading}></button>
                         </div>
                         <div className="modal-body">
@@ -94,9 +103,11 @@ function ImportButton({ buttonText = '+', fileChangeCallback = () => Promise.res
                             {source === 'file' ? (
                             <div className="mb-3">
                                 <label htmlFor="file-upload" className="form-label">{titleText}</label>
-                                <input className="form-control" type="file" id="file-upload" onChange={onFileChange} disabled={loading} />
+                                <div className="import-dropzone">
+                                    <input className="form-control" type="file" id="file-upload" accept=".zip,.xml" onChange={onFileChange} disabled={loading} />
+                                </div>
                                 {selectedFile ? (
-                                    <div className="small text-muted mt-2">Selected file: <strong>{selectedFile.name}</strong></div>
+                                    <div className="small text-muted mt-2">Selected file: <strong>{selectedFile.name}</strong> ({formatSize(selectedFile.size)})</div>
                                 ) : (
                                     <div className="small text-muted mt-2">No file selected</div>
                                 )}
@@ -119,6 +130,11 @@ function ImportButton({ buttonText = '+', fileChangeCallback = () => Promise.res
                                     aria-invalid={uploadError ? true : undefined} aria-describedby="upload-secret-help" />
                                 <div id="upload-secret-help" className="form-text">Required by the server to accept uploads.</div>
                             </div>
+                            {loading && (
+                                <div className="progress mb-3" role="progressbar" aria-label="Import in progress">
+                                    <div className="progress-bar progress-bar-striped progress-bar-animated w-100"></div>
+                                </div>
+                            )}
                             {uploadError && (
                                 <div id="upload-error" className="alert alert-danger mb-0" role="alert">
                                     Upload failed: {uploadError}

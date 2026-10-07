@@ -224,4 +224,30 @@ class HealthCatalogApiIT extends AbstractAPIIT{
 		result.andExpect(status().is4xxClientError());
 	}
 
+
+	@Test
+	void testGetDrugDetails() throws Exception {
+		InputStream inputStream = getClass().getClassLoader().getResourceAsStream("Sample.zip");
+		MockMultipartFile file = new MockMultipartFile("file", "Sample.zip", "application/zip", inputStream);
+		final ResultActions uploadResult = mvc.perform(multipart(ApiConstants.VERSIONS_API_V1).file(file)
+				.header(UploadSecretVerifier.UPLOAD_SECRET, DEFAULT_UPLOAD_SECRET));
+		String versionId = objectMapper.readTree(uploadResult.andReturn().getResponse().getContentAsString())
+				.get("id").asText();
+
+		String drugs = mvc.perform(get(ApiConstants.API_V1 + "/versions/" + versionId + "/drugs")
+				.param("searchTerm", "").param("page", "0").param("size", "1").accept(MediaType.APPLICATION_JSON))
+				.andReturn().getResponse().getContentAsString();
+		String drugId = objectMapper.readTree(drugs).get("content").get(0).get("id").asText();
+
+		mvc.perform(get(ApiConstants.API_V1 + "/drugs/" + drugId + "/details").accept(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.drugId").value(drugId))
+				.andExpect(jsonPath("$.restrictions").exists()).andExpect(jsonPath("$.pricing").exists())
+				.andExpect(jsonPath("$.insurance").isArray()).andExpect(jsonPath("$.protocols").isArray());
+	}
+
+	@Test
+	void testGetDrugDetails_UnknownDrug_IsNotFound() throws Exception {
+		mvc.perform(get(ApiConstants.API_V1 + "/drugs/" + UUID.randomUUID() + "/details")
+				.accept(MediaType.APPLICATION_JSON)).andExpect(status().isNotFound());
+	}
 }

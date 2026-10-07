@@ -47,4 +47,10 @@ public interface CatalogItemRepository extends JpaRepository<CatalogItemEntity, 
 	@Modifying
 	@Query("delete from CatalogItemEntity i where i.version.id = :versionId")
 	int deleteAllByVersionId(@Param("versionId") UUID versionId);
+
+	List<CatalogItemEntity> findByVersionIdAndTypeAndName(UUID versionId, CatalogItemType type, String name);
+
+	List<CatalogItemEntity> findByVersionIdAndTypeAndCode(UUID versionId, CatalogItemType type, String code);
+
+	List<CatalogItemEntity> findByVersionIdAndType(UUID versionId, CatalogItemType type);
 }

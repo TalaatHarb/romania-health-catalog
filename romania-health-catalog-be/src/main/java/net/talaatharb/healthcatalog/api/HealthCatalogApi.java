@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import net.talaatharb.healthcatalog.config.UploadSecretVerifier;
 import net.talaatharb.healthcatalog.constants.ApiConstants;
+import net.talaatharb.healthcatalog.dto.DrugDetailsDto;
 import net.talaatharb.healthcatalog.dto.DrugDto;
 import net.talaatharb.healthcatalog.dto.HealthCatalogVersionDto;
 
@@ -53,4 +54,8 @@ public interface HealthCatalogApi {
 	@GetMapping(path = "/drugs/{drugId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.OK)
 	DrugDto getDrug(@PathVariable UUID drugId);
+
+	@GetMapping(path = "/drugs/{drugId}/details", produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseStatus(HttpStatus.OK)
+	DrugDetailsDto getDrugDetails(@PathVariable UUID drugId);
 }
