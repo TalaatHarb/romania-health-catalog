@@ -12,6 +12,7 @@ import { CatalogItem } from "@/models/CatalogItem";
 const API_URL = `${environment.apiUrl}/backend`;
 const API_V1 = `${API_URL}/api/v1`;
 const VERSIONS_API = `${API_V1}/versions`;
+const IMPORTS_API = `${API_V1}/imports`;
 const DRUGS_API = "/drugs";
 const ITEMS_API = "/items";
 const ITEM_TYPES_API = "/item-types";
@@ -19,6 +20,13 @@ const DEFAULT_PAGE_SIZE = environment.defaultPageSize;
 const DEFAULT_SORT = environment.defaultSort;
 const DEFAULT_ITEM_SORT = environment.defaultItemSort;
 const UPLOAD_SECRET_HEADER = "uploadSecret";
+
+interface CatalogImport {
+    id: string;
+    status: 'RUNNING' | 'SUCCEEDED' | 'FAILED';
+    version?: CatalogVersion;
+    error?: string;
+}
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
     const response = await fetch(url, init);
@@ -57,16 +65,16 @@ async function uploadFile(file: File, uploadSecret: string): Promise<Version> {
     const formData = new FormData()
     formData.append('file', file, file.name)
 
-    const json = await fetchJson<CatalogVersion>(VERSIONS_API, {
+    const job = await fetchJson<CatalogImport>(IMPORTS_API, {
         method: "POST",
         headers: { [UPLOAD_SECRET_HEADER]: uploadSecret },
         body: formData,
     });
-    return CatalogVersionToVersion.catalogVersionToVersion(json);
+    return waitForImport(job, uploadSecret);
 }
 
 async function uploadUrl(url: string, uploadSecret: string): Promise<Version> {
-    const json = await fetchJson<CatalogVersion>(`${VERSIONS_API}/from-url`, {
+    const job = await fetchJson<CatalogImport>(`${IMPORTS_API}/from-url`, {
         method: "POST",
         headers: {
             [UPLOAD_SECRET_HEADER]: uploadSecret,
@@ -74,7 +82,25 @@ async function uploadUrl(url: string, uploadSecret: string): Promise<Version> {
         },
         body: new URLSearchParams({ url }),
     });
-    return CatalogVersionToVersion.catalogVersionToVersion(json);
+    return waitForImport(job, uploadSecret);
+}
+
+async function waitForImport(initial: CatalogImport, uploadSecret: string): Promise<Version> {
+    let job = initial;
+    while (job.status === 'RUNNING') {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        try {
+            job = await fetchJson<CatalogImport>(`${IMPORTS_API}/${encodeURIComponent(job.id)}`, {
+                headers: { [UPLOAD_SECRET_HEADER]: uploadSecret },
+            });
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`Could not check import ${job.id}: ${message}. It may still be running. Check available versions before retrying.`);
+        }
+    }
+    if (job.status === 'FAILED') throw new Error(job.error || 'Catalog import failed');
+    if (job.status !== 'SUCCEEDED' || !job.version) throw new Error(`Invalid status returned for import ${job.id}`);
+    return CatalogVersionToVersion.catalogVersionToVersion(job.version);
 }
 
 async function searchForDrug(versionId: string, searchTerm: string, pageable: Pageable = { page: 0, size: DEFAULT_PAGE_SIZE }): Promise<Page<Drug>>{

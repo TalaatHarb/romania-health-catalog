@@ -1,5 +1,6 @@
 import { Drug } from "@/models/Drug";
 import { DrugDetails } from "@/models/DrugDetails";
+import InsuranceHistory from "./InsuranceHistory";
 
 interface DrugViewProps {
   drug?: Drug;
@@ -106,19 +107,7 @@ function DrugExtraDetails({ details }: Readonly<{ details: DrugDetails }>) {
         <strong>Pricing:</strong> package {money(pricing.pricePerPackage)} • wholesale {money(pricing.wholeSalePricePerPackage)}
         {' '}• max {money(pricing.maxPrice)} • reference {money(pricing.referencePrice)}
       </div>
-      <div className="mb-2">
-        <strong>Insurance / copayment lists:</strong>
-        {insurance.length === 0 ? <span className="text-muted"> none</span> : (
-          <ul className="mb-0">
-            {insurance.map((i, idx) => (
-              <li key={`${i.listCode}-${i.source}-${idx}`}>
-                {i.listCode}{i.listDescription ? ` - ${i.listDescription}` : ''}{i.percent !== undefined && i.percent !== null ? ` (${i.percent}%)` : ''}
-                <span className="text-muted"> via {i.source === 'DRUG' ? 'drug' : 'active substance'}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <InsuranceHistory insurance={insurance} />
       <div>
         <strong>Therapeutic protocols:</strong>
         {protocols.length === 0 ? <span className="text-muted"> none</span> : (

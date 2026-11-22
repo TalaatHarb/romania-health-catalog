@@ -10,10 +10,8 @@ spec:
   # Hibernate updates the schema on start (ddl-auto: update), keep a single writer of the schema
   replicas: 1
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+    # Import recovery must not mark work on an older, still-running pod as interrupted.
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: rhc-be

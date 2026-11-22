@@ -70,15 +70,17 @@ uploads because of the `uploadSecret` header.
   and browsers reject duplicated headers.
 - Responses produced by nginx itself (413, 502, 504) carry no CORS headers, so the browser reports them as CORS
   errors. For that reason the API ingress allows 50 MB request bodies (the backend's upload limit) and
-  10-minute timeouts for big imports.
+  10-minute timeouts for legacy synchronous imports. The UI now submits background imports and polls
+  their status, so catalog processing does not keep a single request open.
 
 ## Notes
 
 - The backend reserves and is limited to 8 GiB of container memory, with a 6 GiB Java heap
   (`JAVA_TOOL_OPTIONS` in `backend/configmap.yaml`). The remaining 2 GiB is for native JVM memory and other
   container overhead. The node needs enough allocatable memory for this request alongside PostgreSQL and
-  the other pods; otherwise the backend stays Pending. Rolling updates can temporarily need two backend pods.
-  Imports still hold the uncompressed XML and parsed objects in memory, so larger or concurrent imports can
+  the other pods; otherwise the backend stays Pending. The `Recreate` strategy stops the old backend before
+  starting its replacement, causing a brief outage during updates and preventing overlapping import workers.
+  XML is parsed from a stream, but the full parsed catalog still occupies heap memory; a large catalog can
   exceed this budget. Heap exhaustion exits the JVM so Kubernetes can restart it.
   To apply the memory change without rebuilding the image:
   ```shell
@@ -87,7 +89,8 @@ uploads because of the `uploadSecret` header.
   kubectl -n rhc rollout status deployment rhc-be
   ```
 - The backend starts with the `postgres` profile, and Hibernate creates or updates the schema. Keep one backend
-  replica, so only one instance changes the schema at a time.
+  replica for schema changes and the single background-import worker. Import statuses persist in PostgreSQL;
+  unfinished jobs are marked failed on startup. Check available versions before retrying an interrupted import.
 - Only the `health` and `info` actuator endpoints are exposed. The probes use
   `/backend/actuator/health/liveness` and `/backend/actuator/health/readiness`.
 - The FE upload dialog is pre-filled with the development default `UPLOAD_SECREET`. Type the real upload

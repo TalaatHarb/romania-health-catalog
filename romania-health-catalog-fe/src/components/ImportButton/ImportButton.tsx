@@ -1,6 +1,6 @@
 import { Version } from "@/models/Version";
 import { environment } from "@/environment/environment";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 interface ImportButtonProps {
     buttonText?: string;
@@ -19,11 +19,19 @@ function formatSize(bytes: number): string {
 function ImportButton({ buttonText = '+', fileChangeCallback = () => Promise.resolve({ version: new Date(), id: '1' }), urlUploadCallback, titleText = 'Import file', defaultUploadSecret = environment.defaultUploadSecret }: Readonly<ImportButtonProps>) {
 
     const [loading, setLoading] = useState(false);
+    const [uploadCompleted, setUploadCompleted] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
     const [uploadSecret, setUploadSecret] = useState(defaultUploadSecret);
     const [uploadError, setUploadError] = useState<string | undefined>(undefined);
     const [source, setSource] = useState('file');
     const [catalogUrl, setCatalogUrl] = useState('');
+
+    useEffect(() => {
+        if (!uploadCompleted) return;
+        // Wait for React to re-enable the dismiss button before closing the modal.
+        document.getElementById('dismiss-modal')?.click();
+        setUploadCompleted(false);
+    }, [uploadCompleted]);
 
     function onFileChange(event: FormEvent<HTMLInputElement>): void {
         const input: HTMLInputElement = event.target as HTMLInputElement;
@@ -68,9 +76,7 @@ function ImportButton({ buttonText = '+', fileChangeCallback = () => Promise.res
         // reset file input value so same file can be selected again
         const input = document.getElementById('file-upload') as HTMLInputElement | null;
         if (input) input.value = '';
-        // close modal programmatically by clicking the dismiss button
-        const dismiss = document.getElementById('dismiss-modal') as HTMLButtonElement | null;
-        dismiss?.click();
+        setUploadCompleted(true);
     }
 
     return (
@@ -116,7 +122,7 @@ function ImportButton({ buttonText = '+', fileChangeCallback = () => Promise.res
                                 <div className="mb-3">
                                     <label htmlFor="catalog-url" className="form-label">Catalog URL</label>
                                     <div id="catalog-url-help" className="form-text mb-2">
-                                        HTTPS link to XML or ZIP on a server-approved host. The backend downloads and imports it; keep this dialog open until it finishes.
+                                        HTTPS link to XML or ZIP on a server-approved host.
                                     </div>
                                     <input id="catalog-url" className="form-control" type="url" pattern="https://.*" required
                                         aria-describedby="catalog-url-help" value={catalogUrl} disabled={loading}
@@ -131,8 +137,14 @@ function ImportButton({ buttonText = '+', fileChangeCallback = () => Promise.res
                                 <div id="upload-secret-help" className="form-text">Required by the server to accept uploads.</div>
                             </div>
                             {loading && (
-                                <div className="progress mb-3" role="progressbar" aria-label="Import in progress">
-                                    <div className="progress-bar progress-bar-striped progress-bar-animated w-100"></div>
+                                <div role="status" className="mb-3">
+                                    <div className="progress mb-2" role="progressbar" aria-label="Import in progress">
+                                        <div className="progress-bar progress-bar-striped progress-bar-animated w-100"></div>
+                                    </div>
+                                    <div className="small text-muted">
+                                        Large catalogs can take several minutes. Processing runs in the background;
+                                        this dialog checks for completion automatically. Keep it open to see the result.
+                                    </div>
                                 </div>
                             )}
                             {uploadError && (

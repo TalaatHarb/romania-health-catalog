@@ -92,6 +92,9 @@ selecting one shows all of its properties.
 | GET | `/versions` | Uploaded versions |
 | POST | `/versions` | Upload a catalog (`multipart/form-data`, field `file`, `.xml` or `.zip`); requires the upload secret |
 | POST | `/versions/from-url` | Download and import an XML or ZIP catalog; form field `url`, same upload secret header/parameter |
+| POST | `/imports` | Start a background file import (`multipart/form-data`, field `file`); requires the `uploadSecret` header; returns `202` with a job ID |
+| POST | `/imports/from-url` | Start a background URL import (form field `url`); requires the `uploadSecret` header; returns `202` with a job ID |
+| GET | `/imports/{id}` | Read import status and the resulting version or error; requires the `uploadSecret` header |
 | GET | `/versions/{versionId}/drugs?searchTerm=&page=&size=&sort=` | Search active drugs by name or code |
 | GET | `/drugs/{drugId}` | Drug details |
 | GET | `/drugs/{drugId}/details` | Additional restrictions, pricing, insurance/copayment lists and therapeutic protocols |
@@ -123,8 +126,22 @@ curl -H "uploadSecret: UPLOAD_SECREET" -F "file=@catalog.zip" http://localhost:8
 
 ### Import from a URL
 Choose **URL** in the upload dialog, enter an HTTPS catalog link and the upload secret. The backend downloads
-and processes the document, so the browser sends only the URL, not the file. This is synchronous: keep the
-dialog open until the version is returned. The existing ingress timeout still applies.
+and processes the document, so the browser sends only the URL, not the file. Both file and URL imports in the
+UI use background jobs: submission returns `202` promptly and the UI polls the authenticated status endpoint
+every two seconds. A `RUNNING` job becomes `SUCCEEDED` only after the catalog transaction commits, with its
+version in `version`; `FAILED` jobs include an `error`. Keep the dialog open to see the result. If checking
+status fails, the import may still finish; check available versions before retrying.
+
+Job statuses are stored in the database. Only one background import runs at a time; concurrent submissions
+return `409` rather than queueing memory-heavy imports. Uploaded files are staged before the request ends
+and removed after processing. On restart, unfinished jobs are marked failed with an interruption message.
+Run a single backend instance; the Kubernetes deployment uses `Recreate` to avoid overlapping workers during
+updates. The original `/versions` POST endpoints remain synchronous for compatibility and are still subject
+to request/proxy timeouts; use `/imports` for large catalogs.
+
+Drug details group copayment records by list, percentage and source (drug or active substance).
+Expand a group to inspect its distinct validity periods and conditions/pricing, newest first. Historical
+records are preserved rather than presented as repeated, apparently current coverage.
 
 `CATALOG_IMPORT_ALLOWED_HOSTS` is a comma-separated list of exact download hostnames, defaulting to
 `www.casmb.ro,www.cnas.ro`. Only HTTPS on port 443 is accepted, without embedded credentials or fragments.
@@ -132,8 +149,9 @@ Every redirect is checked against the same allowlist (at most five redirects). D
 50 MiB, with a 10-second connect timeout, 30-second read timeout, and a two-minute download budget checked
 between reads/redirects. Uncompressed XML is limited to 2 GiB. Temporary download files are deleted after
 processing. XML is parsed directly from a stream for both URL and file imports, but the parsed catalog still
-occupies heap memory. Download failures return a `502` problem response; invalid hosts and size limits return
-`400`, and a missing or invalid secret returns `403` before any download.
+occupies heap memory. On the legacy synchronous endpoints, download failures return a `502` problem response
+and invalid hosts and size limits return `400`; background imports report these in the job's `FAILED` status.
+A missing or invalid secret returns `403` before any download.
 
 ```shell
 curl -H "uploadSecret: UPLOAD_SECREET" --data-urlencode "url=https://www.casmb.ro/catalog.zip" http://localhost:8080/backend/api/v1/versions/from-url

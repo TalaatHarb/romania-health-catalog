@@ -109,6 +109,17 @@ describe('ImportButton', () => {
         });
     });
 
+    test('re-enables the dismiss button before closing a successful import', async () => {
+        const callback = jest.fn().mockResolvedValue({ version: new Date(), id: '1' });
+        render(<ImportButton fileChangeCallback={callback} />);
+        selectFile();
+        const dismiss = document.getElementById('dismiss-modal') as HTMLButtonElement;
+        const onDismiss = jest.fn(() => expect(dismiss.disabled).toBe(false));
+        dismiss.addEventListener('click', onDismiss);
+        fireEvent.click(document.getElementById('upload-button') as HTMLButtonElement);
+        await waitFor(() => expect(onDismiss).toHaveBeenCalledTimes(1));
+    });
+
     test('shows loading state during upload', async () => {
         const mockCallback = jest.fn().mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
         render(<ImportButton fileChangeCallback={mockCallback} />);
