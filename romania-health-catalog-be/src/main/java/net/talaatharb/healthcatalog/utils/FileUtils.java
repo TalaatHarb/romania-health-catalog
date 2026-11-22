@@ -130,21 +130,21 @@ public class FileUtils {
 
 	// Bound decompressed input as well as the downloaded archive.
 	private static class LimitedXmlStream extends FilterInputStream {
-		private long remaining = 512L * 1024 * 1024;
+		private long remaining = 2L * 1024 * 1024 * 1024;
 
 		LimitedXmlStream(InputStream input) { super(input); }
 
 		@Override
 		public int read() throws IOException {
 			int value = in.read();
-			if (value != -1 && --remaining < 0) throw new IllegalArgumentException("Catalog XML exceeds 512 MiB");
+			if (value != -1 && --remaining < 0) throw new IllegalArgumentException("Catalog XML exceeds 2 GiB");
 			return value;
 		}
 
 		@Override
 		public int read(byte[] bytes, int offset, int length) throws IOException {
 			int count = in.read(bytes, offset, (int) Math.min(length, Math.max(1, remaining)));
-			if (count > 0 && (remaining -= count) < 0) throw new IllegalArgumentException("Catalog XML exceeds 512 MiB");
+			if (count > 0 && (remaining -= count) < 0) throw new IllegalArgumentException("Catalog XML exceeds 2 GiB");
 			return count;
 		}
 	}

@@ -130,7 +130,7 @@ dialog open until the version is returned. The existing ingress timeout still ap
 `www.casmb.ro,www.cnas.ro`. Only HTTPS on port 443 is accepted, without embedded credentials or fragments.
 Every redirect is checked against the same allowlist (at most five redirects). Downloads are limited to
 50 MiB, with a 10-second connect timeout, 30-second read timeout, and a two-minute download budget checked
-between reads/redirects. Uncompressed XML is limited to 512 MiB. Temporary download files are deleted after
+between reads/redirects. Uncompressed XML is limited to 2 GiB. Temporary download files are deleted after
 processing. XML is parsed directly from a stream for both URL and file imports, but the parsed catalog still
 occupies heap memory. Download failures return a `502` problem response; invalid hosts and size limits return
 `400`, and a missing or invalid secret returns `403` before any download.
